@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Manual práctico para instalar Hyper-V, crear una máquina virtual e instalar Windows Server 2022.">
+  <meta name="theme-color" content="#06172f">
+  <title>Manual de instalación | Hyper-V y Windows Server 2022</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="scroll-progress" aria-hidden="true"><span id="scrollProgress"></span></div>
+
+  <header class="site-header" id="inicio">
+    <nav class="topbar" aria-label="Navegación principal">
+      <a class="brand" href="#inicio" aria-label="Ir al inicio">
+        <span class="brand-mark">HV</span>
+        <span><strong>Laboratorio virtual</strong><small>Manual técnico paso a paso</small></span>
+      </a>
+      <div class="top-actions">
+        <button class="icon-button" id="themeToggle" type="button" aria-label="Cambiar tema" title="Cambiar tema">◐</button>
+        <button class="button button-ghost" id="printButton" type="button">Imprimir / PDF</button>
+        <button class="menu-button" id="menuButton" type="button" aria-expanded="false" aria-controls="mobileMenu">Menú</button>
+      </div>
+    </nav>
+    <div class="mobile-menu" id="mobileMenu" hidden>
+      <a href="#requisitos">Requisitos</a>
+      <a href="#hyperv">Instalar Hyper-V</a>
+      <a href="#maquina-virtual">Crear la VM</a>
+      <a href="#server-2022">Instalar Server 2022</a>
+      <a href="#fuentes">Fuentes</a>
+    </div>
+
+    <section class="hero" aria-labelledby="heroTitle">
+      <img class="hero-image" src="assets/hyperv-lab-hero.png" alt="Ilustración de un servidor físico conectado a máquinas virtuales y a un conmutador de red">
+      <div class="hero-shade"></div>
+      <div class="hero-content">
+        <span class="eyebrow"><span class="live-dot"></span> Guía técnica · Nivel inicial/intermedio</span>
+        <h1 id="heroTitle">Instalación de <span>Hyper‑V</span> y <span>Windows Server 2022</span></h1>
+        <p>Construye un laboratorio virtual completo: prepara el equipo anfitrión, habilita el hipervisor, configura la red, crea la máquina virtual e instala el sistema operativo servidor.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#ruta">Comenzar el laboratorio <span aria-hidden="true">→</span></a>
+          <a class="button button-glass" href="#lista-final">Ver lista de verificación</a>
+        </div>
+        <div class="hero-metrics" aria-label="Resumen del manual">
+          <div><strong>10</strong><span>etapas guiadas</span></div>
+          <div><strong>1</strong><span>laboratorio funcional</span></div>
+          <div><strong>GUI + PS</strong><span>dos métodos</span></div>
+        </div>
+      </div>
+    </section>
+  </header>
+
+  <main>
+    <section class="overview section-shell" id="ruta">
+      <div class="section-heading">
+        <span class="kicker">Ruta del laboratorio</span>
+        <h2>De equipo físico a servidor virtual</h2>
+        <p>Sigue el orden propuesto. Cada etapa incluye qué hacer, por qué se hace y cómo comprobar que quedó bien.</p>
+      </div>
+      <div class="route-grid">
+        <article class="route-card"><span>01</span><div><strong>Preparar</strong><p>Comprobar hardware, edición de Windows y recursos disponibles.</p></div></article>
+        <article class="route-card"><span>02</span><div><strong>Virtualizar</strong><p>Habilitar Hyper‑V y crear el conmutador virtual.</p></div></article>
+        <article class="route-card"><span>03</span><div><strong>Desplegar</strong><p>Crear la VM e instalar Windows Server 2022.</p></div></article>
+        <article class="route-card"><span>04</span><div><strong>Validar</strong><p>Configurar, probar la red y documentar evidencias.</p></div></article>
+      </div>
+    </section>
+
+    <div class="manual-layout section-shell">
+      <aside class="toc" aria-label="Contenido del manual">
+        <div class="toc-inner">
+          <p class="toc-title">En este manual</p>
+          <a href="#conceptos"><span>01</span>Conceptos clave</a>
+          <a href="#requisitos"><span>02</span>Requisitos</a>
+          <a href="#descarga"><span>03</span>Descargas</a>
+          <a href="#hyperv"><span>04</span>Instalar Hyper‑V</a>
+          <a href="#red-virtual"><span>05</span>Red virtual</a>
+          <a href="#maquina-virtual"><span>06</span>Crear la VM</a>
+          <a href="#server-2022"><span>07</span>Instalar Server 2022</a>
+          <a href="#configuracion"><span>08</span>Configuración inicial</a>
+          <a href="#validacion"><span>09</span>Validación</a>
+          <a href="#problemas"><span>10</span>Solución de problemas</a>
+          <a href="#automatizacion"><span>11</span>PowerShell</a>
+          <a href="#evidencias"><span>12</span>Evidencias</a>
+          <a href="#fuentes"><span>13</span>Fuentes consultadas</a>
+        </div>
+      </aside>
+
+      <article class="manual-content">
+        <section class="chapter intro-card" id="conceptos">
+          <div class="chapter-number">01</div>
+          <div class="chapter-title"><span>Fundamentos</span><h2>Qué vas a construir</h2></div>
+          <p class="lead">Hyper‑V es la plataforma de virtualización de Microsoft. Permite ejecutar varios equipos virtuales aislados sobre un mismo equipo físico, compartiendo procesador, memoria, almacenamiento y red.</p>
+
+          <div class="architecture" role="img" aria-label="Arquitectura: hardware, Hyper-V, máquinas virtuales y servicios">
+            <div class="arch-layer services"><span>Servicios</span><div>DNS</div><div>DHCP</div><div>Web</div></div>
+            <div class="arch-layer vms"><span>Máquinas virtuales</span><div>WS 2022</div><div>Cliente</div><div>Laboratorio</div></div>
+            <div class="arch-layer hypervisor"><span>Hipervisor</span><strong>Hyper‑V</strong><small>aislamiento · recursos · red virtual</small></div>
+            <div class="arch-layer hardware"><span>Equipo físico</span><strong>CPU · RAM · Disco · NIC</strong></div>
+          </div>
+
+          <div class="concept-grid">
+            <div class="concept"><b>HOST</b><h3>Anfitrión</h3><p>Equipo físico donde se instala y administra Hyper‑V.</p></div>
+            <div class="concept"><b>VM</b><h3>Máquina virtual</h3><p>Equipo simulado que recibe CPU, RAM, disco y red.</p></div>
+            <div class="concept"><b>VHDX</b><h3>Disco virtual</h3><p>Archivo que almacena el sistema y los datos de la VM.</p></div>
+            <div class="concept"><b>vSW</b><h3>Conmutador virtual</h3><p>Conecta la VM con el host, otras VM o la red física.</p></div>
+          </div>
+
+          <div class="callout info"><span>i</span><div><strong>Resultado esperado</strong><p>Una VM de generación 2, conectada a un conmutador virtual, con Windows Server 2022 Desktop Experience instalado, red operativa y una configuración inicial segura.</p></div></div>
+        </section>
+
+        <section class="chapter" id="requisitos">
+          <div class="chapter-number">02</div>
+          <div class="chapter-title"><span>Antes de empezar</span><h2>Requisitos del equipo anfitrión</h2></div>
+          <p>Comprueba los requisitos antes de descargar archivos o crear la máquina virtual. Una preparación correcta evita la mayoría de los errores posteriores.</p>
+
+          <div class="requirements-grid">
+            <div class="requirement"><span class="req-icon">CPU</span><div><h3>Procesador</h3><p>64 bits, virtualización asistida por hardware y traducción de direcciones de segundo nivel (SLAT).</p></div></div>
+            <div class="requirement"><span class="req-icon">RAM</span><div><h3>Memoria</h3><p>8 GB como mínimo práctico; 16 GB o más recomendados para trabajar con comodidad.</p></div></div>
+            <div class="requirement"><span class="req-icon">SSD</span><div><h3>Almacenamiento</h3><p>Al menos 80 GB libres. Un SSD reduce de forma notable los tiempos de instalación.</p></div></div>
+            <div class="requirement"><span class="req-icon">OS</span><div><h3>Sistema anfitrión</h3><p>Windows 10/11 Pro, Enterprise o Education de 64 bits. Hyper‑V no está incluido en Home.</p></div></div>
+          </div>
+
+          <h3 class="subheading">Comprobaciones rápidas</h3>
+          <div class="step-list compact">
+            <div class="step"><span>1</span><div><h3>Abra Información del sistema</h3><p>Presione <kbd>Win</kbd> + <kbd>R</kbd>, escriba <code>msinfo32</code> y pulse Enter.</p></div></div>
+            <div class="step"><span>2</span><div><h3>Revise los requisitos de Hyper‑V</h3><p>Al final del resumen, las cuatro entradas de Hyper‑V deben indicar <strong>Sí</strong>.</p></div></div>
+            <div class="step"><span>3</span><div><h3>Confirme la edición de Windows</h3><p>Vaya a Configuración → Sistema → Acerca de → Especificaciones de Windows.</p></div></div>
+          </div>
+
+          <div class="code-card">
+            <div class="code-head"><span>PowerShell · consulta del sistema</span><button class="copy-button" type="button">Copiar</button></div>
+            <pre><code>systeminfo.exe
+Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion,
+    CsTotalPhysicalMemory, HyperVisorPresent</code></pre>
+          </div>
+          <div class="callout warning"><span>!</span><div><strong>Si la virtualización aparece deshabilitada</strong><p>Reinicie el equipo, entre al firmware UEFI/BIOS y active Intel VT‑x/VT‑d o AMD‑V/SVM. El nombre exacto depende del fabricante.</p></div></div>
+        </section>
+
+        <section class="chapter" id="descarga">
+          <div class="chapter-number">03</div>
+          <div class="chapter-title"><span>Medio de instalación</span><h2>Descargar Windows Server 2022</h2></div>
+          <div class="step-list">
+            <div class="step"><span>1</span><div><h3>Obtenga la imagen oficial</h3><p>Desde el Centro de Evaluación de Microsoft, seleccione Windows Server 2022 y descargue el archivo ISO de 64 bits.</p></div></div>
+            <div class="step"><span>2</span><div><h3>Elija idioma y edición</h3><p>Use el idioma que empleará durante las prácticas. En la instalación escogerá Standard o Datacenter y la modalidad con interfaz gráfica.</p></div></div>
+            <div class="step"><span>3</span><div><h3>Guarde la ISO de forma ordenada</h3><p>Ejemplo: <code>D:\ISO\Windows_Server_2022.iso</code>. Evite moverla después de asociarla a la VM.</p></div></div>
+            <div class="step"><span>4</span><div><h3>Verifique la integridad</h3><p>Calcule el hash SHA‑256 y compárelo con el valor publicado por el proveedor cuando esté disponible.</p></div></div>
+          </div>
+          <div class="code-card">
+            <div class="code-head"><span>PowerShell · calcular SHA-256</span><button class="copy-button" type="button">Copiar</button></div>
+            <pre><code>Get-FileHash "D:\ISO\Windows_Server_2022.iso" -Algorithm SHA256</code></pre>
+          </div>
+          <div class="callout tip"><span>✓</span><div><strong>Licenciamiento</strong><p>La imagen de evaluación es adecuada para formación y laboratorios temporales. Para producción, utilice una licencia válida y respete los términos de Microsoft.</p></div></div>
+        </section>
+
+        <section class="chapter" id="hyperv">
+          <div class="chapter-number">04</div>
+          <div class="chapter-title"><span>Plataforma de virtualización</span><h2>Instalar Hyper‑V en Windows</h2></div>
+          <div class="method-grid">
+            <div class="method-card featured">
+              <span class="method-label">Método gráfico</span>
+              <h3>Características de Windows</h3>
+              <ol>
+                <li>Abra el menú Inicio y busque <strong>Activar o desactivar las características de Windows</strong>.</li>
+                <li>Marque <strong>Hyper‑V</strong> y confirme que incluye Plataforma de Hyper‑V y Herramientas de administración.</li>
+                <li>Pulse <strong>Aceptar</strong>, espere la instalación y seleccione <strong>Reiniciar ahora</strong>.</li>
+                <li>Después del reinicio, abra <strong>Administrador de Hyper‑V</strong>.</li>
+              </ol>
+            </div>
+            <div class="method-card">
+              <span class="method-label">Método PowerShell</span>
+              <h3>Instalación automatizada</h3>
+              <p>Abra PowerShell como administrador y ejecute:</p>
+              <div class="mini-code"><code>Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All</code></div>
+              <p>Confirme el reinicio cuando el sistema lo solicite.</p>
+            </div>
+          </div>
+          <figure class="guide-figure wide" data-lightbox tabindex="0" role="button" aria-label="Ampliar imagen de las características de Windows">
+            <div class="screen-mock windows-feature-screen">
+              <div class="window-bar"><span class="app-square">▦</span><strong>Características de Windows</strong><span class="window-controls">—　□　×</span></div>
+              <div class="window-body feature-body">
+                <p>Activar o desactivar las características de Windows</p>
+                <div class="feature-list">
+                  <span>☐ .NET Framework 3.5</span>
+                  <span>☐ Contenedores</span>
+                  <span class="selected">☑ Hyper‑V</span>
+                  <span class="nested">☑ Herramientas de administración de Hyper‑V</span>
+                  <span class="nested">☑ Plataforma de Hyper‑V</span>
+                  <span>☐ Servicios para NFS</span>
+                  <span>☐ Subsistema de Windows para Linux</span>
+                </div>
+                <div class="dialog-actions"><button type="button">Aceptar</button><button type="button">Cancelar</button></div>
+              </div>
+            </div>
+            <figcaption><span><b>Pantalla clave:</b> active Hyper‑V y sus dos componentes.</span><strong>Ampliar ↗</strong></figcaption>
+          </figure>
+          <div class="callout danger"><span>!</span><div><strong>Importante</strong><p>Guarde su trabajo antes de habilitar la característica: el reinicio es necesario para cargar el hipervisor.</p></div></div>
+          <h3 class="subheading">Verificación</h3>
+          <div class="code-card">
+            <div class="code-head"><span>PowerShell · estado de Hyper-V</span><button class="copy-button" type="button">Copiar</button></div>
+            <pre><code>Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All
+Get-Service vmms</code></pre>
+          </div>
+          <p class="expected"><strong>Debe ver:</strong> State = Enabled y el servicio <code>vmms</code> en estado Running.</p>
+        </section>
+
+        <section class="chapter" id="red-virtual">
+          <div class="chapter-number">05</div>
+          <div class="chapter-title"><span>Conectividad</span><h2>Crear el conmutador virtual</h2></div>
+          <p>El conmutador virtual funciona como un switch de red por software. Define con quién podrá comunicarse la máquina virtual.</p>
+          <div class="switch-grid">
+            <article><span class="switch-type external">EX</span><h3>Externo</h3><p>Conecta la VM con la red física e Internet mediante la tarjeta del host.</p><small>Recomendado para este laboratorio</small></article>
+            <article><span class="switch-type internal">IN</span><h3>Interno</h3><p>Comunicación entre el host y las VM, sin acceso directo a la red física.</p><small>Útil para redes aisladas</small></article>
+            <article><span class="switch-type private">PR</span><h3>Privado</h3><p>Solo comunica máquinas virtuales conectadas al mismo conmutador.</p><small>Máximo aislamiento</small></article>
+          </div>
+          <div class="step-list">
+            <div class="step"><span>1</span><div><h3>Abra el Administrador de conmutadores virtuales</h3><p>En Administrador de Hyper‑V, seleccione el host y, en Acciones, abra <strong>Administrador de conmutadores virtuales</strong>.</p></div></div>
+            <div class="step"><span>2</span><div><h3>Cree un conmutador externo</h3><p>Seleccione <strong>Externo</strong> → Crear conmutador virtual. Nombre sugerido: <code>vSwitch-Externo</code>.</p></div></div>
+            <div class="step"><span>3</span><div><h3>Elija el adaptador físico correcto</h3><p>Seleccione Ethernet o Wi‑Fi según la conexión activa. Mantenga marcada la opción que permite al sistema operativo de administración compartir el adaptador.</p></div></div>
+            <div class="step"><span>4</span><div><h3>Aplique y espere</h3><p>La conectividad del host puede interrumpirse unos segundos mientras Windows reorganiza los adaptadores.</p></div></div>
+          </div>
+          <figure class="guide-figure wide" data-lightbox tabindex="0" role="button" aria-label="Ampliar imagen del administrador de conmutadores virtuales">
+            <div class="screen-mock switch-screen">
+              <div class="window-bar"><span class="app-square">↔</span><strong>Administrador de conmutadores virtuales</strong><span class="window-controls">—　□　×</span></div>
+              <div class="window-body switch-body">
+                <aside><b>Conmutadores virtuales</b><span class="nav-selected">Nuevo conmutador</span><span>Conmutador predeterminado</span></aside>
+                <div class="switch-panel"><h4>¿Qué tipo de conmutador virtual desea crear?</h4><label class="option-selected"><i>●</i><span><b>Externo</b><small>Crea acceso a una red física.</small></span></label><label><i>○</i><span><b>Interno</b><small>Comunica las VM con el host.</small></span></label><label><i>○</i><span><b>Privado</b><small>Comunica únicamente las VM.</small></span></label><button type="button">Crear conmutador virtual</button></div>
+              </div>
+            </div>
+            <figcaption><span><b>Pantalla clave:</b> seleccione Externo para usar la red física.</span><strong>Ampliar ↗</strong></figcaption>
+          </figure>
+          <div class="network-visual" aria-label="Diagrama de conexión de red">
+            <div class="net-node internet"><span>WAN</span><strong>Red / Internet</strong></div>
+            <i></i>
+            <div class="net-node switch"><span>vSW</span><strong>vSwitch externo</strong></div>
+            <i></i>
+            <div class="net-split"><div class="net-node"><span>HOST</span><strong>Windows anfitrión</strong></div><div class="net-node"><span>VM</span><strong>Server 2022</strong></div></div>
+          </div>
+        </section>
+
+        <section class="chapter" id="maquina-virtual">
+          <div class="chapter-number">06</div>
+          <div class="chapter-title"><span>Máquina virtual</span><h2>Crear la VM para Windows Server 2022</h2></div>
+          <div class="spec-card">
+            <div><small>Nombre</small><strong>SRV-WS2022-LAB</strong></div>
+            <div><small>Generación</small><strong>2</strong></div>
+            <div><small>Procesadores</small><strong>2 vCPU</strong></div>
+            <div><small>Memoria</small><strong>4–8 GB</strong></div>
+            <div><small>Disco</small><strong>80 GB VHDX</strong></div>
+            <div><small>Red</small><strong>vSwitch-Externo</strong></div>
+          </div>
+          <div class="callout info"><span>i</span><div><strong>Generación 2</strong><p>Usa firmware UEFI, arranque seguro, controladora SCSI y dispositivos modernos. Es la opción recomendada para Windows Server 2022.</p></div></div>
+          <div class="visual-gallery two-up" aria-label="Imágenes de creación de la máquina virtual">
+            <figure class="guide-figure" data-lightbox tabindex="0" role="button" aria-label="Ampliar selección de generación de la máquina virtual">
+              <div class="screen-mock wizard-screen">
+                <div class="window-bar"><span class="app-square">VM</span><strong>Asistente para nueva máquina virtual</strong><span class="window-controls">×</span></div>
+                <div class="window-body wizard-body"><aside><span>Nombre</span><span class="current">Generación</span><span>Memoria</span><span>Redes</span><span>Disco</span></aside><div><small>PASO 2 DE 7</small><h4>Especificar generación</h4><label>○ Generación 1</label><label class="choice">● Generación 2</label><p>Compatible con firmware UEFI, arranque seguro y dispositivos modernos.</p><div class="wizard-actions"><button type="button">Anterior</button><button class="primary-action" type="button">Siguiente</button></div></div></div>
+              </div>
+              <figcaption><span><b>Generación:</b> seleccione Generación 2.</span><strong>Ampliar ↗</strong></figcaption>
+            </figure>
+            <figure class="guide-figure" data-lightbox tabindex="0" role="button" aria-label="Ampliar resumen de configuración de la máquina virtual">
+              <div class="screen-mock summary-screen">
+                <div class="window-bar"><span class="app-square">VM</span><strong>Finalización del asistente</strong><span class="window-controls">×</span></div>
+                <div class="window-body summary-body"><h4>Resumen de SRV-WS2022-LAB</h4><div><span>Generación</span><b>2</b></div><div><span>Memoria inicial</span><b>4096 MB</b></div><div><span>Conexión</span><b>vSwitch-Externo</b></div><div><span>Disco virtual</span><b>80 GB · VHDX</b></div><div><span>Instalación</span><b>Windows_Server_2022.iso</b></div><button type="button">Finalizar</button></div>
+              </div>
+              <figcaption><span><b>Resumen:</b> verifique recursos, red, disco e ISO.</span><strong>Ampliar ↗</strong></figcaption>
+            </figure>
+          </div>
+          <div class="step-list detailed">
+            <div class="step"><span>1</span><div><h3>Inicie el asistente</h3><p>Administrador de Hyper‑V → Nuevo → Máquina virtual. Revise la pantalla inicial y pulse Siguiente.</p></div></div>
+            <div class="step"><span>2</span><div><h3>Nombre y ubicación</h3><p>Escriba <code>SRV-WS2022-LAB</code>. Si dispone de otro disco SSD, marque la opción para almacenar la VM en una ubicación diferente.</p></div></div>
+            <div class="step"><span>3</span><div><h3>Seleccione Generación 2</h3><p>Esta elección no se puede cambiar después. Windows Server 2022 es compatible con UEFI y arranque seguro.</p></div></div>
+            <div class="step"><span>4</span><div><h3>Asigne memoria</h3><p>Use 4096 MB como mínimo práctico. Puede activar Memoria dinámica, dejando 4096 MB de inicio y un máximo acorde con el host.</p></div></div>
+            <div class="step"><span>5</span><div><h3>Conecte la red</h3><p>Seleccione <code>vSwitch-Externo</code>. Si aún no existe, puede dejar la VM sin conexión y asociarlo después.</p></div></div>
+            <div class="step"><span>6</span><div><h3>Cree el disco virtual</h3><p>Formato VHDX, expansión dinámica y 80 GB. El archivo crecerá según el espacio realmente utilizado.</p></div></div>
+            <div class="step"><span>7</span><div><h3>Monte la imagen ISO</h3><p>Seleccione <strong>Instalar un sistema operativo desde un archivo de imagen de arranque</strong> y busque la ISO descargada.</p></div></div>
+            <div class="step"><span>8</span><div><h3>Finalice y ajuste</h3><p>Antes de encender, abra Configuración → Procesador y asigne 2 procesadores virtuales. Confirme también firmware, DVD, disco y red.</p></div></div>
+          </div>
+        </section>
+
+        <section class="chapter" id="server-2022">
+          <div class="chapter-number">07</div>
+          <div class="chapter-title"><span>Sistema operativo invitado</span><h2>Instalar Windows Server 2022</h2></div>
+          <div class="install-banner"><span>ISO</span><i></i><span>UEFI</span><i></i><span>SETUP</span><i></i><span>SERVER</span></div>
+          <div class="visual-gallery two-up" aria-label="Imágenes de instalación de Windows Server 2022">
+            <figure class="guide-figure" data-lightbox tabindex="0" role="button" aria-label="Ampliar selección de edición de Windows Server 2022">
+              <div class="screen-mock setup-screen">
+                <div class="setup-brand"><span>▦</span><strong>Windows Server Setup</strong></div>
+                <div class="setup-body"><small>Paso 2 de 5</small><h4>Seleccione el sistema operativo que desea instalar</h4><div class="edition-list"><span>Windows Server 2022 Standard Evaluation</span><span class="edition-selected">Windows Server 2022 Standard Evaluation<br><b>(Desktop Experience)</b></span><span>Windows Server 2022 Datacenter Evaluation</span><span>Windows Server 2022 Datacenter Evaluation (Desktop Experience)</span></div><div class="setup-actions"><button type="button">Anterior</button><button type="button">Siguiente</button></div></div>
+              </div>
+              <figcaption><span><b>Edición:</b> elija Desktop Experience para obtener escritorio.</span><strong>Ampliar ↗</strong></figcaption>
+            </figure>
+            <figure class="guide-figure" data-lightbox tabindex="0" role="button" aria-label="Ampliar selección del disco de instalación">
+              <div class="screen-mock setup-screen">
+                <div class="setup-brand"><span>▦</span><strong>Windows Server Setup</strong></div>
+                <div class="setup-body"><small>Paso 4 de 5</small><h4>¿Dónde desea instalar Windows?</h4><div class="disk-table"><div><b>Nombre</b><b>Tamaño total</b><b>Espacio disponible</b></div><div class="disk-selected"><span>Unidad 0: espacio sin asignar</span><span>80.0 GB</span><span>80.0 GB</span></div></div><div class="disk-tools"><span>↻ Actualizar</span><span>✣ Nuevo</span><span>▣ Cargar controlador</span></div><div class="setup-actions"><button type="button">Anterior</button><button type="button">Siguiente</button></div></div>
+              </div>
+              <figcaption><span><b>Disco:</b> seleccione el espacio sin asignar de 80 GB.</span><strong>Ampliar ↗</strong></figcaption>
+            </figure>
+            <figure class="guide-figure" data-lightbox tabindex="0" role="button" aria-label="Ampliar progreso de instalación de Windows Server 2022">
+              <div class="screen-mock setup-screen progress-screen">
+                <div class="setup-brand"><span>▦</span><strong>Windows Server Setup</strong></div>
+                <div class="setup-body"><small>Paso 5 de 5</small><h4>Instalando Windows Server</h4><div class="install-progress"><div><span>Copiando archivos de Windows</span><b>100%</b></div><div><span>Preparando archivos para la instalación</span><b>78%</b></div><i><em></em></i><p>El equipo se reiniciará varias veces. Esto puede tardar algunos minutos.</p></div></div>
+              </div>
+              <figcaption><span><b>Proceso:</b> espere los reinicios y no arranque de nuevo desde la ISO.</span><strong>Ampliar ↗</strong></figcaption>
+            </figure>
+            <figure class="guide-figure" data-lightbox tabindex="0" role="button" aria-label="Ampliar pantalla para establecer la contraseña del administrador">
+              <div class="screen-mock password-screen">
+                <div class="password-backdrop"><div class="server-symbol">SRV</div><h4>Personalizar configuración</h4><p>Debe cambiar la contraseña del usuario antes de iniciar sesión.</p><label>Contraseña<input type="password" value="Clave-Segura-2026" readonly></label><label>Confirmar contraseña<input type="password" value="Clave-Segura-2026" readonly></label><button type="button">Finalizar</button></div>
+              </div>
+              <figcaption><span><b>Seguridad:</b> defina una contraseña robusta para Administrator.</span><strong>Ampliar ↗</strong></figcaption>
+            </figure>
+          </div>
+          <div class="step-list detailed">
+            <div class="step"><span>1</span><div><h3>Conecte e inicie la VM</h3><p>En Hyper‑V, seleccione la VM → Conectar → Iniciar. Cuando aparezca el mensaje, presione una tecla para arrancar desde el DVD virtual.</p></div></div>
+            <div class="step"><span>2</span><div><h3>Defina idioma y teclado</h3><p>Seleccione el idioma, formato regional y distribución de teclado correctos; luego pulse <strong>Instalar ahora</strong>.</p></div></div>
+            <div class="step"><span>3</span><div><h3>Seleccione la edición con interfaz gráfica</h3><p>Para un laboratorio de aprendizaje, elija <strong>Windows Server 2022 Standard Evaluation (Desktop Experience)</strong>. “Server Core” no incluye escritorio completo.</p></div></div>
+            <div class="step"><span>4</span><div><h3>Acepte la licencia</h3><p>Lea los términos, marque la casilla de aceptación y continúe.</p></div></div>
+            <div class="step"><span>5</span><div><h3>Elija instalación personalizada</h3><p>Seleccione <strong>Personalizada: instalar solo Microsoft Server Operating System</strong>.</p></div></div>
+            <div class="step"><span>6</span><div><h3>Seleccione el disco</h3><p>Marque el espacio sin asignar del disco virtual y pulse Siguiente. El instalador creará las particiones necesarias.</p></div></div>
+            <div class="step"><span>7</span><div><h3>Espere los reinicios</h3><p>La VM copiará archivos y se reiniciará varias veces. No vuelva a presionar una tecla cuando aparezca el aviso de arranque desde DVD.</p></div></div>
+            <div class="step"><span>8</span><div><h3>Establezca la contraseña</h3><p>Configure una contraseña robusta para <strong>Administrator</strong> y guárdela de forma segura.</p></div></div>
+            <div class="step"><span>9</span><div><h3>Inicie sesión</h3><p>En la ventana de conexión use Acción → Ctrl+Alt+Supr, o el botón correspondiente, e ingrese con Administrator.</p></div></div>
+          </div>
+          <div class="callout warning"><span>!</span><div><strong>¿No inicia desde la ISO?</strong><p>Apague la VM, revise Configuración → Firmware, confirme que la unidad DVD esté primero y que la ISO siga asociada.</p></div></div>
+        </section>
+
+        <section class="chapter" id="configuracion">
+          <div class="chapter-number">08</div>
+          <div class="chapter-title"><span>Primer arranque</span><h2>Configuración inicial del servidor</h2></div>
+          <p>La instalación termina cuando el sistema arranca, pero el servidor aún necesita identidad, red, actualizaciones y seguridad básica.</p>
+          <div class="visual-gallery two-up" aria-label="Imágenes de configuración inicial de Windows Server">
+            <figure class="guide-figure" data-lightbox tabindex="0" role="button" aria-label="Ampliar pantalla de propiedades del servidor local">
+              <div class="screen-mock manager-screen">
+                <div class="manager-top"><span>Administrador del servidor</span><b>Administrar　Herramientas　Ver</b></div>
+                <div class="manager-body"><aside><span>Panel</span><span class="manager-current">Servidor local</span><span>Todos los servidores</span><span>Servicios de archivos</span></aside><div><h4>Servidor local</h4><div class="property-grid"><span>Nombre del equipo</span><b>SRV-LAB01</b><span>Grupo de trabajo</span><b>WORKGROUP</b><span>Ethernet</span><b>192.168.10.10</b><span>Zona horaria</span><b>(UTC-05:00) Bogotá</b><span>Windows Update</span><b>Actualizaciones disponibles</b></div></div></div>
+              </div>
+              <figcaption><span><b>Servidor local:</b> revise nombre, red, zona horaria y actualizaciones.</span><strong>Ampliar ↗</strong></figcaption>
+            </figure>
+            <figure class="guide-figure" data-lightbox tabindex="0" role="button" aria-label="Ampliar propiedades de IPv4 de Windows Server">
+              <div class="screen-mock ipv4-screen">
+                <div class="window-bar"><span class="app-square">NET</span><strong>Propiedades: Protocolo de Internet versión 4</strong><span class="window-controls">×</span></div>
+                <div class="window-body ipv4-body"><label class="radio">● Usar la siguiente dirección IP:</label><div class="form-grid"><span>Dirección IP:</span><b>192 . 168 . 10 . 10</b><span>Máscara de subred:</span><b>255 . 255 . 255 . 0</b><span>Puerta de enlace:</span><b>192 . 168 . 10 . 1</b></div><label class="radio">● Usar las siguientes direcciones de servidor DNS:</label><div class="form-grid"><span>DNS preferido:</span><b>192 . 168 . 10 . 1</b><span>DNS alternativo:</span><b>1 . 1 . 1 . 1</b></div><div class="dialog-actions"><button type="button">Aceptar</button><button type="button">Cancelar</button></div></div>
+              </div>
+              <figcaption><span><b>IPv4:</b> adapte estos valores al plan de direccionamiento.</span><strong>Ampliar ↗</strong></figcaption>
+            </figure>
+          </div>
+          <div class="task-grid">
+            <article><span>01</span><h3>Cambiar el nombre</h3><p>Use un nombre descriptivo como <code>SRV-DC01</code> o <code>SRV-LAB01</code> y reinicie.</p></article>
+            <article><span>02</span><h3>Configurar IPv4</h3><p>Defina IP, máscara, puerta de enlace y DNS según el plan de direccionamiento.</p></article>
+            <article><span>03</span><h3>Ajustar zona horaria</h3><p>Use la zona local correcta; para Colombia: UTC‑05:00 Bogotá.</p></article>
+            <article><span>04</span><h3>Actualizar</h3><p>Instale las actualizaciones disponibles y reinicie cuando sea necesario.</p></article>
+            <article><span>05</span><h3>Revisar red</h3><p>El perfil, adaptador y DNS deben coincidir con el escenario del laboratorio.</p></article>
+            <article><span>06</span><h3>Crear punto de control</h3><p>Después de validar, cree un checkpoint llamado <code>Base-Limpia</code>.</p></article>
+          </div>
+          <div class="code-card">
+            <div class="code-head"><span>PowerShell · configuración inicial de ejemplo</span><button class="copy-button" type="button">Copiar</button></div>
+            <pre><code>Rename-Computer -NewName "SRV-LAB01" -Restart
+
+# Ejecutar después del reinicio; adapte nombres y direcciones
+Get-NetAdapter
+New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 192.168.10.10 `
+  -PrefixLength 24 -DefaultGateway 192.168.10.1
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" `
+  -ServerAddresses 192.168.10.1,1.1.1.1</code></pre>
+          </div>
+          <div class="callout danger"><span>!</span><div><strong>No copie direcciones sin adaptarlas</strong><p>La IP del ejemplo puede entrar en conflicto con su red. Use el direccionamiento asignado por el instructor o administrador.</p></div></div>
+        </section>
+
+        <section class="chapter" id="validacion">
+          <div class="chapter-number">09</div>
+          <div class="chapter-title"><span>Control de calidad</span><h2>Validar que el laboratorio funciona</h2></div>
+          <div class="validation-table" role="table" aria-label="Pruebas de validación">
+            <div class="table-row table-head" role="row"><span>Prueba</span><span>Comando / acción</span><span>Resultado esperado</span></div>
+            <div class="table-row" role="row"><span>Identidad</span><code>hostname</code><span>Nombre configurado</span></div>
+            <div class="table-row" role="row"><span>Dirección IP</span><code>ipconfig /all</code><span>IP, gateway y DNS correctos</span></div>
+            <div class="table-row" role="row"><span>Pila TCP/IP</span><code>ping 127.0.0.1</code><span>Respuesta local</span></div>
+            <div class="table-row" role="row"><span>Puerta de enlace</span><code>ping 192.168.10.1</code><span>Respuesta del gateway</span></div>
+            <div class="table-row" role="row"><span>DNS</span><code>Resolve-DnsName microsoft.com</code><span>Nombre resuelto</span></div>
+            <div class="table-row" role="row"><span>Internet</span><code>Test-NetConnection microsoft.com -Port 443</code><span>TcpTestSucceeded: True</span></div>
+            <div class="table-row" role="row"><span>Edición</span><code>winver</code><span>Windows Server 2022</span></div>
+          </div>
+          <div class="callout tip"><span>✓</span><div><strong>Criterio de terminado</strong><p>La VM inicia sin la ISO, reconoce CPU/memoria/disco, obtiene o conserva la IP prevista, resuelve DNS y puede comunicarse con los equipos definidos por el diseño de red.</p></div></div>
+        </section>
+
+        <section class="chapter" id="problemas">
+          <div class="chapter-number">10</div>
+          <div class="chapter-title"><span>Diagnóstico</span><h2>Solución de problemas frecuentes</h2></div>
+          <div class="accordion" data-accordion>
+            <details><summary><span>Hyper‑V no aparece en Características de Windows</span><b>+</b></summary><div><p>Compruebe que Windows sea Pro, Enterprise o Education y de 64 bits. Si es Home, deberá actualizar la edición o usar otra plataforma autorizada.</p></div></details>
+            <details><summary><span>La máquina virtual no puede iniciar</span><b>+</b></summary><div><p>Revise que la virtualización esté activa en UEFI/BIOS, que Hyper‑V esté habilitado y que haya memoria disponible. Reduzca la RAM inicial si el host está limitado.</p></div></details>
+            <details><summary><span>Aparece “No operating system was loaded”</span><b>+</b></summary><div><p>Confirme que la ISO esté montada, la unidad DVD sea la primera opción de firmware y que presionó una tecla durante el aviso de arranque.</p></div></details>
+            <details><summary><span>La VM no tiene Internet</span><b>+</b></summary><div><p>Revise que el adaptador esté conectado al vSwitch externo correcto, que el host tenga conexión y que IP, puerta de enlace y DNS sean válidos. Pruebe primero gateway y luego DNS.</p></div></details>
+            <details><summary><span>El host perdió temporalmente la red</span><b>+</b></summary><div><p>Al crear un conmutador externo, Windows reemplaza el enlace directo por un adaptador virtual. Espere unos segundos y confirme que se eligió la NIC física activa y que se permite compartirla con el host.</p></div></details>
+            <details><summary><span>La instalación muestra solo consola</span><b>+</b></summary><div><p>Se instaló Server Core. Si necesita interfaz gráfica, repita la instalación y elija una edición que indique <strong>Desktop Experience</strong>.</p></div></details>
+            <details><summary><span>El rendimiento es muy lento</span><b>+</b></summary><div><p>Cierre aplicaciones del host, use SSD, asigne 2 vCPU y al menos 4 GB de RAM, y evite reservar más memoria de la que el host puede sostener.</p></div></details>
+          </div>
+        </section>
+
+        <section class="chapter" id="automatizacion">
+          <div class="chapter-number">11</div>
+          <div class="chapter-title"><span>Administración eficiente</span><h2>Crear el laboratorio con PowerShell</h2></div>
+          <p>Este ejemplo reproduce la configuración base. Ejecútelo en PowerShell como administrador y adapte rutas, memoria y nombre del conmutador.</p>
+          <div class="code-card large">
+            <div class="code-head"><span>PowerShell · creación completa de la VM</span><button class="copy-button" type="button">Copiar</button></div>
+            <pre><code>$vmName = "SRV-WS2022-LAB"
+$vmPath = "D:\Hyper-V"
+$isoPath = "D:\ISO\Windows_Server_2022.iso"
+$switchName = "vSwitch-Externo"
+
+# Crear la máquina virtual de generación 2
+New-VM -Name $vmName -Generation 2 -MemoryStartupBytes 4GB `
+  -NewVHDPath "$vmPath\$vmName\$vmName.vhdx" -NewVHDSizeBytes 80GB `
+  -Path $vmPath -SwitchName $switchName
+
+# Ajustar procesador y memoria dinámica
+Set-VMProcessor -VMName $vmName -Count 2
+Set-VMMemory -VMName $vmName -DynamicMemoryEnabled $true `
+  -MinimumBytes 2GB -StartupBytes 4GB -MaximumBytes 8GB
+
+# Montar ISO y priorizar el DVD
+Add-VMDvdDrive -VMName $vmName -Path $isoPath
+$dvd = Get-VMDvdDrive -VMName $vmName
+Set-VMFirmware -VMName $vmName -FirstBootDevice $dvd
+
+# Iniciar
+Start-VM -Name $vmName
+VMConnect.exe localhost $vmName</code></pre>
+          </div>
+          <div class="callout warning"><span>!</span><div><strong>Antes de ejecutar</strong><p>Compruebe que las carpetas existen, la ISO es accesible y <code>vSwitch-Externo</code> coincide exactamente con el nombre de su conmutador.</p></div></div>
+        </section>
+
+        <section class="chapter" id="evidencias">
+          <div class="chapter-number">12</div>
+          <div class="chapter-title"><span>Cierre del laboratorio</span><h2>Evidencias y buenas prácticas</h2></div>
+          <div class="evidence-grid">
+            <article><span>01</span><h3>Características</h3><p>Captura de Hyper‑V habilitado o resultado del comando de estado.</p></article>
+            <article><span>02</span><h3>Conmutador</h3><p>Nombre, tipo y adaptador físico asociado.</p></article>
+            <article><span>03</span><h3>Configuración VM</h3><p>Generación, RAM, vCPU, VHDX, DVD y red.</p></article>
+            <article><span>04</span><h3>Instalación</h3><p>Edición seleccionada y primer inicio de sesión.</p></article>
+            <article><span>05</span><h3>Identidad y red</h3><p>Salida de <code>hostname</code> e <code>ipconfig /all</code>.</p></article>
+            <article><span>06</span><h3>Pruebas</h3><p>Conectividad con gateway, DNS y servicio HTTPS.</p></article>
+          </div>
+
+          <h3 class="subheading" id="lista-final">Lista de verificación final</h3>
+          <div class="checklist" data-checklist="hyperv-lab">
+            <label><input type="checkbox"><span>El equipo cumple los requisitos de Hyper‑V.</span></label>
+            <label><input type="checkbox"><span>La virtualización está habilitada en UEFI/BIOS.</span></label>
+            <label><input type="checkbox"><span>La ISO oficial está descargada y verificada.</span></label>
+            <label><input type="checkbox"><span>Hyper‑V y sus herramientas están instalados.</span></label>
+            <label><input type="checkbox"><span>El conmutador virtual tiene el tipo y la NIC correctos.</span></label>
+            <label><input type="checkbox"><span>La VM es generación 2 y tiene recursos suficientes.</span></label>
+            <label><input type="checkbox"><span>Windows Server 2022 Desktop Experience inicia correctamente.</span></label>
+            <label><input type="checkbox"><span>Nombre, zona horaria, IP, gateway y DNS están configurados.</span></label>
+            <label><input type="checkbox"><span>Las pruebas de conectividad fueron satisfactorias.</span></label>
+            <label><input type="checkbox"><span>Las evidencias están organizadas y existe un checkpoint base.</span></label>
+            <div class="check-progress"><span id="checkProgressBar"></span><strong id="checkProgressText">0 de 10 completadas</strong></div>
+          </div>
+
+          <div class="practice-grid">
+            <div><h3>Seguridad</h3><ul><li>Use contraseñas únicas y robustas.</li><li>Aplique actualizaciones antes de instalar roles.</li><li>No exponga RDP directamente a Internet.</li></ul></div>
+            <div><h3>Rendimiento</h3><ul><li>No sobreasigne memoria o CPU.</li><li>Use almacenamiento SSD cuando sea posible.</li><li>Conserve espacio libre en el host.</li></ul></div>
+            <div><h3>Operación</h3><ul><li>Nombre VM, discos y switches de forma consistente.</li><li>Documente cambios de red.</li><li>No trate los checkpoints como copias de seguridad.</li></ul></div>
+          </div>
+
+          <h3 class="subheading">Glosario esencial</h3>
+          <dl class="glossary">
+            <div><dt>Hypervisor</dt><dd>Capa que crea, ejecuta y aísla máquinas virtuales.</dd></div>
+            <div><dt>Host</dt><dd>Equipo físico que aporta los recursos de virtualización.</dd></div>
+            <div><dt>Guest</dt><dd>Sistema operativo que se ejecuta dentro de una VM.</dd></div>
+            <div><dt>VHDX</dt><dd>Formato moderno de disco duro virtual de Hyper‑V.</dd></div>
+            <div><dt>UEFI</dt><dd>Firmware moderno usado por las VM de generación 2.</dd></div>
+            <div><dt>Checkpoint</dt><dd>Punto de retorno temporal del estado de una VM.</dd></div>
+          </dl>
+        </section>
+
+        <section class="chapter sources" id="fuentes">
+          <div class="chapter-number">13</div>
+          <div class="chapter-title"><span>Consulta y ampliación</span><h2>Fuentes consultadas</h2></div>
+          <p>Recursos oficiales y material audiovisual utilizados como apoyo para la elaboración del manual.</p>
+          <div class="source-list">
+            <a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/get-started/install-hyper-v" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Instalar Hyper‑V</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/host-hardware-requirements" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Requisitos de hardware de Hyper‑V</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/get-started/create-a-virtual-machine-in-hyper-v" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Crear una máquina virtual</strong><b>↗</b></a>
+            <a href="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2022" target="_blank" rel="noreferrer"><span>Microsoft Evaluation Center</span><strong>Windows Server 2022 Evaluation</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/en-us/windows-server/get-started/install-windows-server" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Instalar Windows Server</strong><b>↗</b></a>
+            <a href="https://youtube.com/playlist?list=PL2Z95CSZ1N4E-yNYehqD1FKU8aBdjBfRM&amp;si=oQVzK2aBSMnFuRyJ" target="_blank" rel="noreferrer"><span>YouTube · material complementario</span><strong>Lista de reproducción consultada</strong><b>↗</b></a>
+          </div>
+          <p class="source-note">Última revisión editorial: julio de 2026. Las interfaces y nombres de opciones pueden variar ligeramente según la versión instalada.</p>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <footer>
+    <div class="section-shell footer-inner">
+      <div><span class="brand-mark">HV</span><p><strong>Manual de laboratorio virtual</strong><br>Hyper‑V + Windows Server 2022</p></div>
+      <p>Recurso educativo · Diseño adaptable · Consulta interactiva</p>
+      <a href="#inicio">Volver arriba ↑</a>
+    </div>
+  </footer>
+
+  <button class="back-to-top" id="backToTop" type="button" aria-label="Volver arriba">↑</button>
+  <div class="toast" id="toast" role="status" aria-live="polite">Comando copiado</div>
+  <dialog class="image-dialog" id="imageDialog" aria-labelledby="dialogCaption">
+    <div class="dialog-toolbar"><span id="dialogCounter">Imagen 1 de 1</span><button id="dialogClose" type="button" aria-label="Cerrar imagen">×</button></div>
+    <div class="dialog-stage" id="dialogStage"></div>
+    <div class="dialog-footer"><button id="dialogPrevious" type="button">← Anterior</button><p id="dialogCaption"></p><button id="dialogNext" type="button">Siguiente →</button></div>
+  </dialog>
+  <script src="script.js"></script>
+</body>
+</html>
