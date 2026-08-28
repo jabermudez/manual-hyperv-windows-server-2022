@@ -26,7 +26,9 @@ Todas las rutas del proyecto son relativas y el archivo `.nojekyll` está inclui
 ## Estructura
 
 - `index.html`: estructura y contenido base del manual.
-- `course-data.js`: fases, lecciones, parámetros, pasos y evidencias del curso ampliado. Añadir una lección aquí actualiza la interfaz automáticamente.
+- `course-data.js`: fases, lecciones, parámetros, pasos y evidencias compartidos por las páginas del curso.
+- `phase-page.js`: genera cada página temática, su navegación y progreso.
+- `secciones/`: seis páginas independientes para puesta en marcha, actualizaciones, identidades, administración base, seguridad y servicios.
 - `styles.css`: diseño adaptable, temas claro/oscuro e impresión.
 - `script.js`: navegación, pestañas accesibles, progreso, comandos copiables y checklist.
 - `assets/`: imagen principal e icono del sitio.
