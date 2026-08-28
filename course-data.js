@@ -1,5 +1,5 @@
 /*
- * Curso ampliado. Para añadir contenido, agregue una fase o una lección a COURSE_PHASES.
+ * Contenido modular. Para añadir contenido, agregue una fase o una lección a COURSE_PHASES.
  * La interfaz, las pestañas y el progreso se generan automáticamente.
  */
 window.COURSE_PHASES = [

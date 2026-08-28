@@ -8,7 +8,7 @@
   <title>Manual de instalación | Hyper-V y Windows Server 2022</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="home-course">
   <div class="scroll-progress" aria-hidden="true"><span id="scrollProgress"></span></div>
 
   <header class="site-header" id="inicio">
@@ -24,12 +24,12 @@
       </div>
     </nav>
     <div class="mobile-menu" id="mobileMenu" hidden>
-      <a href="#requisitos">Requisitos</a>
-      <a href="#hyperv">Instalar Hyper-V</a>
-      <a href="#maquina-virtual">Crear la VM</a>
-      <a href="#server-2022">Instalar Server 2022</a>
-      <a href="#curso-ampliado">Curso ampliado</a>
-      <a href="#fuentes">Fuentes</a>
+      <a href="#lecciones">Todas las lecciones</a>
+      <a href="lecciones/01-conceptos-clave.html">Comenzar el curso</a>
+      <a href="lecciones/04-instalar-hyper-v.html">Instalar Hyper-V</a>
+      <a href="lecciones/07-instalar-server-2022.html">Instalar Server 2022</a>
+      <a href="lecciones/16-server-manager.html">Administración</a>
+      <a href="lecciones/20-microsoft-defender.html">Seguridad</a>
     </div>
 
     <section class="hero" aria-labelledby="heroTitle">
@@ -38,13 +38,13 @@
       <div class="hero-content">
         <span class="eyebrow"><span class="live-dot"></span> Guía técnica · Nivel inicial/intermedio</span>
         <h1 id="heroTitle">Instalación de <span>Hyper‑V</span> y <span>Windows Server 2022</span></h1>
-        <p>Construye un laboratorio virtual completo: prepara el equipo anfitrión, habilita el hipervisor, configura la red, crea la máquina virtual e instala el sistema operativo servidor.</p>
+        <p>Recorre una ruta completa y progresiva: prepara Hyper‑V, instala Windows Server 2022 y continúa hasta la administración segura de actualizaciones, identidades, firewall y servicios.</p>
         <div class="hero-actions">
-          <a class="button button-primary" href="#ruta">Comenzar el laboratorio <span aria-hidden="true">→</span></a>
-          <a class="button button-glass" href="#lista-final">Ver lista de verificación</a>
+          <a class="button button-primary" href="#lecciones">Ver todas las lecciones <span aria-hidden="true">→</span></a>
+          <a class="button button-glass" href="lecciones/01-conceptos-clave.html">Comenzar por la lección 1</a>
         </div>
         <div class="hero-metrics" aria-label="Resumen del manual">
-          <div><strong>6</strong><span>fases de administración</span></div>
+          <div><strong>28</strong><span>lecciones ordenadas</span></div>
           <div><strong>1</strong><span>laboratorio funcional</span></div>
           <div><strong>GUI + PS</strong><span>dos métodos</span></div>
         </div>
@@ -53,6 +53,10 @@
   </header>
 
   <main>
+    <section class="lesson-catalog section-shell" id="lecciones">
+      <div class="catalog-heading"><div><span class="kicker">Ruta completa de aprendizaje</span><h2>Todas las lecciones, en un solo recorrido</h2><p>Avance en orden o seleccione el tema que necesite. Cada tarjeta abre una página dedicada con contexto, procedimiento, evidencia y navegación secuencial.</p></div><strong id="catalogCount">28 lecciones</strong></div>
+      <div id="lessonCatalog"></div>
+    </section>
     <section class="overview section-shell" id="ruta">
       <div class="section-heading">
         <span class="kicker">Ruta del laboratorio</span>
@@ -79,7 +83,6 @@
           <a href="#maquina-virtual"><span>06</span>Crear la VM</a>
           <a href="#server-2022"><span>07</span>Instalar Server 2022</a>
           <a href="#configuracion"><span>08</span>Configuración inicial</a>
-          <a href="#curso-ampliado"><span>09</span>Curso ampliado</a>
           <a href="#validacion"><span>10</span>Validación</a>
           <a href="#problemas"><span>11</span>Solución de problemas</a>
           <a href="#automatizacion"><span>12</span>PowerShell</a>
@@ -369,20 +372,6 @@ Set-DnsClientServerAddress -InterfaceAlias "Ethernet" `
           <div class="callout danger"><span>!</span><div><strong>No copie direcciones sin adaptarlas</strong><p>La IP del ejemplo puede entrar en conflicto con su red. Use el direccionamiento asignado por el instructor o administrador.</p></div></div>
         </section>
 
-        <section class="chapter course-expansion" id="curso-ampliado">
-          <div class="chapter-number">09</div>
-          <div class="chapter-title"><span>Lecciones 5 a 20</span><h2>Continuar por secciones</h2></div>
-          <p class="lead">El contenido de administración se encuentra ahora en páginas independientes. Elija una fase para abrir únicamente las lecciones de ese tema.</p>
-          <div class="section-page-grid">
-            <a href="secciones/puesta-en-marcha.html"><span>01</span><div><strong>Puesta en marcha</strong><p>Acceso administrativo y eventos de apagado.</p><small>2 lecciones →</small></div></a>
-            <a href="secciones/actualizaciones.html"><span>02</span><div><strong>Actualizaciones</strong><p>Conectividad, mantenimiento y directivas.</p><small>3 lecciones →</small></div></a>
-            <a href="secciones/identidades.html"><span>03</span><div><strong>Identidades</strong><p>Usuarios, grupos y mínimo privilegio.</p><small>2 lecciones →</small></div></a>
-            <a href="secciones/administracion-base.html"><span>04</span><div><strong>Administración base</strong><p>Server Manager, nombre, hora y RDP.</p><small>4 lecciones →</small></div></a>
-            <a href="secciones/seguridad.html"><span>05</span><div><strong>Seguridad</strong><p>Defender y reglas de firewall.</p><small>4 lecciones →</small></div></a>
-            <a href="secciones/servicios.html"><span>06</span><div><strong>Servicios</strong><p>Inicio, recuperación y dependencias.</p><small>1 lección →</small></div></a>
-          </div>
-        </section>
-
         <section class="chapter" id="validacion">
           <div class="chapter-number">10</div>
           <div class="chapter-title"><span>Control de calidad</span><h2>Validar que el laboratorio funciona</h2></div>
@@ -532,7 +521,7 @@ VMConnect.exe localhost $vmName</code></pre>
     <div class="section-shell footer-inner">
       <div><span class="brand-mark">HV</span><p><strong>Manual de laboratorio virtual</strong><br>Hyper‑V + Windows Server 2022</p></div>
       <p>Recurso educativo · Diseño adaptable · Consulta interactiva</p>
-      <a href="#inicio">Volver arriba ↑</a>
+      <div class="footer-links"><a href="fuentes.html">Fuentes consultadas</a><a href="#inicio">Volver arriba ↑</a></div>
     </div>
   </footer>
 
@@ -543,6 +532,9 @@ VMConnect.exe localhost $vmName</code></pre>
     <div class="dialog-stage" id="dialogStage"></div>
     <div class="dialog-footer"><button id="dialogPrevious" type="button">← Anterior</button><p id="dialogCaption"></p><button id="dialogNext" type="button">Siguiente →</button></div>
   </dialog>
+  <script src="course-data.js"></script>
+  <script src="lesson-map.js"></script>
+  <script src="lesson-catalog.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
