@@ -15,8 +15,6 @@
   document.getElementById('lessonSummary').textContent=lesson.summary;
   document.getElementById('lessonPosition').textContent=`Lección ${lesson.id} de ${lessons.length}`;
   document.getElementById('lessonPositionBar').style.width=`${(lesson.id/lessons.length)*100}%`;
-  document.getElementById('lessonRoute').innerHTML=lessons.map((item)=>`<a href="${href(item)}" ${item.id===lesson.id?'aria-current="page"':''}><span>${String(item.id).padStart(2,'0')}</span>${item.title}</a>`).join('');
-
   const mount=document.getElementById('lessonContent');
   if(lesson.source){
     const response=await fetch('../index.html');

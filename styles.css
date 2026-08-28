@@ -241,7 +241,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .lesson-position > span { color: #9ab4cd; font-size: .78rem; }
 .lesson-position > i { display: block; flex: 1; max-width: 380px; height: 7px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.14); }
 .lesson-position b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--cyan-500), var(--amber-500)); }
-.single-lesson-layout { display: grid; grid-template-columns: 255px minmax(0, 1fr); gap: 46px; align-items: start; padding-block: 55px 100px; }
+.single-lesson-layout { display: block; padding-block: 55px 100px; }
+.single-lesson-layout > div { width: 100%; min-width: 0; }
 .lesson-route { position: sticky; top: 22px; max-height: calc(100vh - 44px); overflow: auto; padding: 15px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); }
 .lesson-route > p { margin: 0 0 9px; padding: 0 7px 9px; border-bottom: 1px solid var(--line); color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-size: .65rem; font-weight: 900; }
 .lesson-route a { display: grid; grid-template-columns: 25px 1fr; gap: 7px; padding: 7px; border-radius: 7px; color: var(--muted); text-decoration: none; font-size: .7rem; line-height: 1.2; }
@@ -533,7 +534,6 @@ footer { color: white; background: var(--navy-950); }
   .phase-layout > aside { position: static; }
   .phase-layout aside nav { grid-template-columns: repeat(2, 1fr); }
   .lesson-card-grid { grid-template-columns: repeat(2, 1fr); }
-  .single-lesson-layout { grid-template-columns: 1fr; }
   .lesson-route { position: static; max-height: 310px; }
   .lesson-route nav { display: grid; grid-template-columns: repeat(2, 1fr); }
 }
