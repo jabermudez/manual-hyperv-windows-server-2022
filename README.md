@@ -1,6 +1,6 @@
 # Manual web: Hyper-V y Windows Server 2022
 
-Sitio web estático, adaptable y sin dependencias externas. Puede abrirse directamente en un navegador o publicarse en GitHub Pages.
+Sitio web estático, adaptable y sin dependencias externas. Incluye el laboratorio de Hyper-V y un curso modular de administración de Windows Server 2022 basado en las lecciones 5 a 20.
 
 ## Vista local
 
@@ -25,8 +25,8 @@ Todas las rutas del proyecto son relativas y el archivo `.nojekyll` está inclui
 
 ## Estructura
 
-- `index.html`: contenido completo del manual.
+- `index.html`: estructura y contenido base del manual.
+- `course-data.js`: fases, lecciones, parámetros, pasos y evidencias del curso ampliado. Añadir una lección aquí actualiza la interfaz automáticamente.
 - `styles.css`: diseño adaptable, temas claro/oscuro e impresión.
-- `script.js`: navegación, progreso, comandos copiables y checklist.
+- `script.js`: navegación, pestañas accesibles, progreso, comandos copiables y checklist.
 - `assets/`: imagen principal e icono del sitio.
-

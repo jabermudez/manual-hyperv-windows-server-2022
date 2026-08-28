@@ -28,6 +28,7 @@
       <a href="#hyperv">Instalar Hyper-V</a>
       <a href="#maquina-virtual">Crear la VM</a>
       <a href="#server-2022">Instalar Server 2022</a>
+      <a href="#curso-ampliado">Curso ampliado</a>
       <a href="#fuentes">Fuentes</a>
     </div>
 
@@ -43,7 +44,7 @@
           <a class="button button-glass" href="#lista-final">Ver lista de verificación</a>
         </div>
         <div class="hero-metrics" aria-label="Resumen del manual">
-          <div><strong>10</strong><span>etapas guiadas</span></div>
+          <div><strong>6</strong><span>fases de administración</span></div>
           <div><strong>1</strong><span>laboratorio funcional</span></div>
           <div><strong>GUI + PS</strong><span>dos métodos</span></div>
         </div>
@@ -78,11 +79,12 @@
           <a href="#maquina-virtual"><span>06</span>Crear la VM</a>
           <a href="#server-2022"><span>07</span>Instalar Server 2022</a>
           <a href="#configuracion"><span>08</span>Configuración inicial</a>
-          <a href="#validacion"><span>09</span>Validación</a>
-          <a href="#problemas"><span>10</span>Solución de problemas</a>
-          <a href="#automatizacion"><span>11</span>PowerShell</a>
-          <a href="#evidencias"><span>12</span>Evidencias</a>
-          <a href="#fuentes"><span>13</span>Fuentes consultadas</a>
+          <a href="#curso-ampliado"><span>09</span>Curso ampliado</a>
+          <a href="#validacion"><span>10</span>Validación</a>
+          <a href="#problemas"><span>11</span>Solución de problemas</a>
+          <a href="#automatizacion"><span>12</span>PowerShell</a>
+          <a href="#evidencias"><span>13</span>Evidencias</a>
+          <a href="#fuentes"><span>14</span>Fuentes consultadas</a>
         </div>
       </aside>
 
@@ -367,8 +369,19 @@ Set-DnsClientServerAddress -InterfaceAlias "Ethernet" `
           <div class="callout danger"><span>!</span><div><strong>No copie direcciones sin adaptarlas</strong><p>La IP del ejemplo puede entrar en conflicto con su red. Use el direccionamiento asignado por el instructor o administrador.</p></div></div>
         </section>
 
-        <section class="chapter" id="validacion">
+        <section class="chapter course-expansion" id="curso-ampliado">
           <div class="chapter-number">09</div>
+          <div class="chapter-title"><span>Lecciones 5 a 20</span><h2>Administración de Windows Server 2022</h2></div>
+          <p class="lead">Continúa desde el primer inicio de sesión hasta la operación de servicios. Las seis fases siguen la secuencia del curso audiovisual, conservan sus parámetros de laboratorio y añaden controles de seguridad y verificación.</p>
+          <div class="course-guide" aria-label="Cómo usar el curso ampliado">
+            <span>1 · Elija una fase</span><span>2 · Abra una lección</span><span>3 · Ejecute y verifique</span><span>4 · Marque su progreso</span>
+          </div>
+          <div id="courseApp"></div>
+          <noscript><p class="callout warning">Active JavaScript para usar las pestañas y las listas interactivas del curso.</p></noscript>
+        </section>
+
+        <section class="chapter" id="validacion">
+          <div class="chapter-number">10</div>
           <div class="chapter-title"><span>Control de calidad</span><h2>Validar que el laboratorio funciona</h2></div>
           <div class="validation-table" role="table" aria-label="Pruebas de validación">
             <div class="table-row table-head" role="row"><span>Prueba</span><span>Comando / acción</span><span>Resultado esperado</span></div>
@@ -384,7 +397,7 @@ Set-DnsClientServerAddress -InterfaceAlias "Ethernet" `
         </section>
 
         <section class="chapter" id="problemas">
-          <div class="chapter-number">10</div>
+          <div class="chapter-number">11</div>
           <div class="chapter-title"><span>Diagnóstico</span><h2>Solución de problemas frecuentes</h2></div>
           <div class="accordion" data-accordion>
             <details><summary><span>Hyper‑V no aparece en Características de Windows</span><b>+</b></summary><div><p>Compruebe que Windows sea Pro, Enterprise o Education y de 64 bits. Si es Home, deberá actualizar la edición o usar otra plataforma autorizada.</p></div></details>
@@ -398,7 +411,7 @@ Set-DnsClientServerAddress -InterfaceAlias "Ethernet" `
         </section>
 
         <section class="chapter" id="automatizacion">
-          <div class="chapter-number">11</div>
+          <div class="chapter-number">12</div>
           <div class="chapter-title"><span>Administración eficiente</span><h2>Crear el laboratorio con PowerShell</h2></div>
           <p>Este ejemplo reproduce la configuración base. Ejecútelo en PowerShell como administrador y adapte rutas, memoria y nombre del conmutador.</p>
           <div class="code-card large">
@@ -431,7 +444,7 @@ VMConnect.exe localhost $vmName</code></pre>
         </section>
 
         <section class="chapter" id="evidencias">
-          <div class="chapter-number">12</div>
+          <div class="chapter-number">13</div>
           <div class="chapter-title"><span>Cierre del laboratorio</span><h2>Evidencias y buenas prácticas</h2></div>
           <div class="evidence-grid">
             <article><span>01</span><h3>Características</h3><p>Captura de Hyper‑V habilitado o resultado del comando de estado.</p></article>
@@ -475,7 +488,7 @@ VMConnect.exe localhost $vmName</code></pre>
         </section>
 
         <section class="chapter sources" id="fuentes">
-          <div class="chapter-number">13</div>
+          <div class="chapter-number">14</div>
           <div class="chapter-title"><span>Consulta y ampliación</span><h2>Fuentes consultadas</h2></div>
           <p>Recursos oficiales y material audiovisual utilizados como apoyo para la elaboración del manual.</p>
           <div class="source-list">
@@ -484,9 +497,29 @@ VMConnect.exe localhost $vmName</code></pre>
             <a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/get-started/create-a-virtual-machine-in-hyper-v" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Crear una máquina virtual</strong><b>↗</b></a>
             <a href="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2022" target="_blank" rel="noreferrer"><span>Microsoft Evaluation Center</span><strong>Windows Server 2022 Evaluation</strong><b>↗</b></a>
             <a href="https://learn.microsoft.com/en-us/windows-server/get-started/install-windows-server" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Instalar Windows Server</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/en-us/windows-server/administration/windows-server-update-services/deploy/4-configure-group-policy-settings-for-automatic-updates" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Directivas de actualizaciones automáticas</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/naming-conventions-for-computer-domain-site-ou" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Convenciones y límites para nombres de equipo</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/remotepc/change-listening-port" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Escritorio remoto y puerto de escucha</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/en-us/defender-endpoint/microsoft-defender-antivirus-on-windows-server" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Defender Antivirus en Windows Server</strong><b>↗</b></a>
+            <a href="https://youtu.be/OnKzOt2JCxs" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 5 · Acceso Administrador</strong><b>↗</b></a>
+            <a href="https://youtu.be/7PYvZAwkYOw" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 6 · Eventos de apagado</strong><b>↗</b></a>
+            <a href="https://youtu.be/hsk4Q-6Zp1A" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 7 · Primeras actualizaciones</strong><b>↗</b></a>
+            <a href="https://youtu.be/hHtcqUPeX9g" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 8 · Administrar actualizaciones</strong><b>↗</b></a>
+            <a href="https://youtu.be/kRMN6dDO6vc" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 9 · Políticas de actualizaciones</strong><b>↗</b></a>
+            <a href="https://youtu.be/WmrfgmKtLps" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 10 · Usuarios y grupos</strong><b>↗</b></a>
+            <a href="https://youtu.be/N-5eD9lAaeU" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 11 · Usuario estándar</strong><b>↗</b></a>
+            <a href="https://youtu.be/z9CUzUS7T10" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 12 · Server Manager</strong><b>↗</b></a>
+            <a href="https://youtu.be/ukwCcCuYrP4" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 13 · Nombre del servidor</strong><b>↗</b></a>
+            <a href="https://youtu.be/BQxZ4Bpwfro" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 14 · Hora, fecha y zona</strong><b>↗</b></a>
+            <a href="https://youtu.be/wclJ7z3cyVQ" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 15 · Escritorio remoto</strong><b>↗</b></a>
+            <a href="https://youtu.be/it1b-O1YneQ" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 16 · Windows Defender</strong><b>↗</b></a>
+            <a href="https://youtu.be/-YpJq-SOSrU" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 17 · Firewall</strong><b>↗</b></a>
+            <a href="https://youtu.be/xQ88bk_0R7c" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 18 · Reglas de entrada</strong><b>↗</b></a>
+            <a href="https://youtu.be/upHsS_5tjfg" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 19 · Reglas de salida</strong><b>↗</b></a>
+            <a href="https://youtu.be/MvqJNWUSABk" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 20 · Servicios</strong><b>↗</b></a>
             <a href="https://youtube.com/playlist?list=PL2Z95CSZ1N4E-yNYehqD1FKU8aBdjBfRM&amp;si=oQVzK2aBSMnFuRyJ" target="_blank" rel="noreferrer"><span>YouTube · material complementario</span><strong>Lista de reproducción consultada</strong><b>↗</b></a>
           </div>
-          <p class="source-note">Última revisión editorial: julio de 2026. Las interfaces y nombres de opciones pueden variar ligeramente según la versión instalada.</p>
+          <p class="source-note">Última revisión editorial: agosto de 2026. Las interfaces y nombres de opciones pueden variar ligeramente según la versión instalada.</p>
         </section>
       </article>
     </div>
@@ -507,6 +540,7 @@ VMConnect.exe localhost $vmName</code></pre>
     <div class="dialog-stage" id="dialogStage"></div>
     <div class="dialog-footer"><button id="dialogPrevious" type="button">← Anterior</button><p id="dialogCaption"></p><button id="dialogNext" type="button">Siguiente →</button></div>
   </dialog>
+  <script src="course-data.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

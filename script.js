@@ -64,6 +64,53 @@ document.querySelectorAll('.copy-button').forEach((button) => {
   });
 });
 
+// Curso modular: pestañas accesibles y progreso persistente.
+const phaseTabs = [...document.querySelectorAll('[role="tab"][data-phase]')];
+const phasePanels = [...document.querySelectorAll('.phase-panel')];
+
+function activatePhase(index, focus = false) {
+  phaseTabs.forEach((tab, position) => {
+    const active = position === index;
+    tab.setAttribute('aria-selected', String(active));
+    tab.tabIndex = active ? 0 : -1;
+    phasePanels[position].hidden = !active;
+  });
+  if (focus) phaseTabs[index].focus();
+}
+
+phaseTabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => activatePhase(index));
+  tab.addEventListener('keydown', (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    let next = index;
+    if (event.key === 'ArrowRight') next = (index + 1) % phaseTabs.length;
+    if (event.key === 'ArrowLeft') next = (index - 1 + phaseTabs.length) % phaseTabs.length;
+    if (event.key === 'Home') next = 0;
+    if (event.key === 'End') next = phaseTabs.length - 1;
+    activatePhase(next, true);
+  });
+});
+
+const courseChecks = [...document.querySelectorAll('[data-course-check]')];
+const courseProgressBar = document.getElementById('courseProgressBar');
+const courseProgressText = document.getElementById('courseProgressText');
+const courseProgressKey = 'windows-server-2022-course-progress-v1';
+if (courseChecks.length) {
+  const savedCourseProgress = JSON.parse(localStorage.getItem(courseProgressKey) || '{}');
+  courseChecks.forEach((box) => { box.checked = Boolean(savedCourseProgress[box.dataset.courseCheck]); });
+  const updateCourseProgress = () => {
+    const state = {};
+    courseChecks.forEach((box) => { state[box.dataset.courseCheck] = box.checked; });
+    const complete = courseChecks.filter((box) => box.checked).length;
+    courseProgressBar.style.width = `${(complete / courseChecks.length) * 100}%`;
+    courseProgressText.textContent = `${complete} de ${courseChecks.length} lecciones completadas`;
+    localStorage.setItem(courseProgressKey, JSON.stringify(state));
+  };
+  courseChecks.forEach((box) => box.addEventListener('change', updateCourseProgress));
+  updateCourseProgress();
+}
+
 const imageDialog = document.getElementById('imageDialog');
 const dialogStage = document.getElementById('dialogStage');
 const dialogCaption = document.getElementById('dialogCaption');
