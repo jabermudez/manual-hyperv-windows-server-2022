@@ -288,6 +288,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .ad-success { display: flex; gap: 14px; align-items: center; margin: 22px 0; padding: 20px; border: 1px solid rgba(18,150,95,.35); border-radius: 14px; background: rgba(18,150,95,.08); }
 .ad-success > span { display: grid; place-items: center; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; color: white; background: #12965f; font-weight: 950; }
 .ad-success p { margin: 3px 0 0; color: var(--muted); }
+.wizard-sequence { display: grid; gap: 10px; margin: 18px 0 24px; }
+.wizard-sequence article { display: grid; grid-template-columns: 50px 1fr; gap: 15px; padding: 18px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-alt); }
+.wizard-sequence article > span { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px; color: white; background: linear-gradient(135deg, var(--blue-700), var(--cyan-500)); font-size: .76rem; font-weight: 950; }
+.wizard-sequence h5 { margin: 0 0 5px; font-size: 1rem; }
+.wizard-sequence p { margin: 0 0 7px; }
+.wizard-sequence small { display: block; padding-top: 7px; border-top: 1px solid var(--line); color: var(--muted); font-size: .75rem; }
 .chapter { position: relative; margin-bottom: 28px; padding: clamp(28px, 5vw, 58px); border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); box-shadow: 0 18px 50px rgba(8,32,63,.055); overflow: hidden; }
 .chapter::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 92px; background: linear-gradient(var(--cyan-500), var(--blue-600)); }
 .chapter-number { position: absolute; top: 38px; right: 42px; color: var(--surface-soft); font-size: 5.2rem; line-height: 1; letter-spacing: -.08em; font-weight: 950; user-select: none; }
@@ -630,6 +636,7 @@ footer { color: white; background: var(--navy-950); }
   .ad-plan-grid { grid-template-columns: 1fr; }
   .ad-architecture { grid-template-columns: 1fr; }
   .ad-architecture > i { writing-mode: horizontal-tb; text-align: center; }
+  .wizard-sequence article { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 430px) {

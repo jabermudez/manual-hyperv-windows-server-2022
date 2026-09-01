@@ -416,22 +416,40 @@ New-NetIPAddress -InterfaceAlias "Ethernet" `
   -DefaultGateway 192.168.10.1
 Set-DnsClientServerAddress -InterfaceAlias "Ethernet" `
   -ServerAddresses 192.168.10.10</code></pre></div>
-          <div class="ad-evidence"><strong>Captura 1 · Preparación</strong><p>Debe mostrar Server Manager con nombre DC01 y las propiedades IPv4. No exponga contraseñas ni direcciones públicas.</p></div>
+          <div class="ad-evidence"><strong>Captura 1 · Preparación</strong><p>Debe mostrar el Administrador del servidor con nombre DC01 y las propiedades IPv4. No exponga contraseñas ni direcciones públicas.</p></div>
 
           <h3 class="subheading" id="ad-role">3. Instalar AD DS y crear el bosque</h3>
-          <h4>Método gráfico</h4>
-          <ol class="procedure-list">
-            <li><span>1</span><p>Abra <strong>Server Manager → Manage → Add Roles and Features</strong>.</p></li>
-            <li><span>2</span><p>Seleccione <strong>Role-based or feature-based installation</strong>, el servidor DC01 y luego <strong>Active Directory Domain Services</strong>.</p></li>
-            <li><span>3</span><p>Pulse <strong>Add Features</strong>, continúe hasta Confirmación y seleccione <strong>Install</strong>.</p></li>
-            <li><span>4</span><p>Al finalizar, pulse la bandera amarilla y <strong>Promote this server to a domain controller</strong>. Instalar el rol no convierte todavía al servidor en DC.</p></li>
-            <li><span>5</span><p>Seleccione <strong>Add a new forest</strong> e introduzca <code>ad.empresa.example</code>.</p></li>
-            <li><span>6</span><p>En opciones del controlador conserve DNS y Global Catalog activados; no marque RODC. Elija nivel funcional <strong>Windows Server 2016</strong> para bosque y dominio.</p></li>
-            <li><span>7</span><p>Defina una contraseña DSRM robusta y distinta de Administrator. Se usa para recuperación offline del directorio.</p></li>
-            <li><span>8</span><p>En DNS puede aparecer una advertencia de delegación en un bosque nuevo de laboratorio; revise el mensaje y continúe si no existe una zona padre administrada.</p></li>
-            <li><span>9</span><p>Confirme el nombre NetBIOS <strong>EMPRESA</strong>. Mantenga las rutas predeterminadas para base de datos, registros y SYSVOL en el laboratorio.</p></li>
-            <li><span>10</span><p>Revise los requisitos previos, pulse <strong>Install</strong> y permita el reinicio automático.</p></li>
-          </ol>
+          <p>La instalación gráfica tiene <strong>dos etapas diferentes</strong>. En la primera se agregan los archivos y herramientas del rol. En la segunda se configura el bosque y el servidor se convierte realmente en controlador de dominio.</p>
+
+          <h4>Etapa A · Asistente para agregar roles y características</h4>
+          <div class="wizard-sequence">
+            <article><span>A1</span><div><h5>Abrir el asistente</h5><p>Abra <strong>Administrador del servidor</strong>. En la esquina superior derecha seleccione <strong>Administrar → Agregar roles y características</strong>. También puede usar el vínculo del panel principal.</p><small>Resultado: se abre el Asistente para agregar roles y características.</small></div></article>
+            <article><span>A2</span><div><h5>Antes de comenzar</h5><p>Esta pantalla recuerda que el servidor debe tener contraseña administrativa segura, dirección IP configurada y actualizaciones aplicadas. Confirme esos requisitos y pulse <strong>Siguiente</strong>. La opción para omitir esta página solo afecta futuras aperturas del asistente.</p><small>No instale el rol si la IP todavía es dinámica o el nombre definitivo no es DC01.</small></div></article>
+            <article><span>A3</span><div><h5>Seleccionar tipo de instalación</h5><p>Marque <strong>Instalación basada en características o en roles</strong> y pulse <strong>Siguiente</strong>. Esta opción instala roles en un servidor concreto.</p><small>No seleccione “Instalación de Servicios de Escritorio remoto”; corresponde a una infraestructura RDS y no a Active Directory.</small></div></article>
+            <article><span>A4</span><div><h5>Seleccionar servidor de destino</h5><p>Elija <strong>Seleccionar un servidor del grupo de servidores</strong>. En la tabla marque <strong>DC01</strong> y verifique su dirección IP <code>192.168.10.10</code>. Pulse <strong>Siguiente</strong>.</p><small>La opción “Seleccionar un disco duro virtual” sirve para modificar un VHD/VHDX sin conexión; no se usa en este laboratorio.</small></div></article>
+            <article><span>A5</span><div><h5>Seleccionar roles de servidor</h5><p>Active <strong>Servicios de dominio de Active Directory</strong>. Aparecerá una ventana con las herramientas necesarias; pulse <strong>Agregar características</strong>. Compruebe que el rol queda marcado y pulse <strong>Siguiente</strong>.</p><small>Se agregan, entre otras, las herramientas de administración de AD DS y el módulo de Active Directory para Windows PowerShell.</small></div></article>
+            <article><span>A6</span><div><h5>Seleccionar características</h5><p>Revise la lista y conserve las selecciones agregadas automáticamente. No necesita marcar características adicionales para este laboratorio. Pulse <strong>Siguiente</strong>.</p><small>No es necesario instalar aquí el rol DNS manualmente: al crear el bosque, el asistente de AD DS lo instalará porque se mantendrá seleccionada la opción Servidor DNS.</small></div></article>
+            <article><span>A7</span><div><h5>Servicios de dominio de Active Directory</h5><p>Lea el resumen del rol. La página explica que AD DS almacena información de usuarios y equipos, recomienda al menos dos controladores para disponibilidad e indica que DNS es necesario para localizar el dominio. Pulse <strong>Siguiente</strong>.</p><small>Esta pantalla es informativa; si no aparece, regrese y compruebe que seleccionó el rol correcto.</small></div></article>
+            <article><span>A8</span><div><h5>Confirmar selecciones de instalación</h5><p>Compruebe que aparece <strong>Servicios de dominio de Active Directory</strong>. Para esta primera etapa puede dejar desmarcada <strong>Reiniciar automáticamente el servidor de destino en caso necesario</strong>, porque la instalación de los binarios del rol no requiere reinicio. Pulse <strong>Instalar</strong>.</p><small>“Especificar una ruta de origen alternativa” solo se usa cuando el servidor no encuentra los archivos de instalación.</small></div></article>
+            <article><span>A9</span><div><h5>Progreso y resultados</h5><p>No cierre la ventana hasta ver <strong>Instalación correcta en DC01</strong>. Luego seleccione <strong>Promover este servidor a controlador de dominio</strong>. Si cerró la ventana, abra la bandera de notificaciones del Administrador del servidor y seleccione el mismo vínculo.</p><small>En este punto el rol está instalado, pero DC01 todavía no es un controlador de dominio.</small></div></article>
+          </div>
+
+          <div class="ad-evidence"><strong>Capturas 2A–2C · Instalación del rol</strong><p>Registre Tipo de instalación, Servidor de destino, Roles de servidor con AD DS marcado, Características agregadas, Confirmación y Resultado correcto.</p></div>
+
+          <h4>Etapa B · Asistente para configuración de Servicios de dominio de Active Directory</h4>
+          <div class="wizard-sequence">
+            <article><span>B1</span><div><h5>Configuración de implementación</h5><p>El asistente ofrece tres posibilidades: <strong>Agregar un controlador de dominio a un dominio existente</strong>, <strong>Agregar un nuevo dominio a un bosque existente</strong> y <strong>Agregar un nuevo bosque</strong>. Como este es el primer controlador, seleccione <strong>Agregar un nuevo bosque</strong>. En <strong>Nombre de dominio raíz</strong> escriba <code>ad.empresa.example</code> y pulse <strong>Siguiente</strong>.</p><small>El nombre debe tener al menos dos etiquetas separadas por punto; no escriba solamente “EMPRESA”.</small></div></article>
+            <article><span>B2</span><div><h5>Opciones del controlador de dominio</h5><p>En <strong>Nivel funcional del bosque</strong> y <strong>Nivel funcional del dominio</strong> seleccione <strong>Windows Server 2016</strong>. En capacidades, mantenga marcados <strong>Servidor del Sistema de nombres de dominio (DNS)</strong> y <strong>Catálogo global (GC)</strong>. Deje sin marcar <strong>Controlador de dominio de solo lectura (RODC)</strong>.</p><p>En <strong>Nombre del sitio</strong> conserve <strong>Default-First-Site-Name</strong> para el laboratorio. Escriba y confirme una contraseña robusta para el <strong>Modo de restauración de servicios de directorio (DSRM)</strong>. Pulse <strong>Siguiente</strong>.</p><small>La contraseña DSRM permite recuperar AD DS fuera del funcionamiento normal; guárdela de forma segura y no reutilice la de Administrator.</small></div></article>
+            <article><span>B3</span><div><h5>Opciones de DNS</h5><p>En un bosque nuevo puede aparecer: “No se puede crear una delegación para este servidor DNS”. En este laboratorio es una <strong>advertencia esperada</strong> porque no existe una zona DNS padre administrada desde la cual delegar. Pulse <strong>Siguiente</strong>.</p><small>Si está integrando el dominio en una infraestructura DNS corporativa existente, no ignore el aviso: coordine la delegación con el administrador de la zona padre.</small></div></article>
+            <article><span>B4</span><div><h5>Opciones adicionales</h5><p>Espere mientras el asistente calcula el nombre NetBIOS. Confirme que sea <strong>EMPRESA</strong> y pulse <strong>Siguiente</strong>.</p><small>NetBIOS se utiliza por compatibilidad y permite iniciar sesión como EMPRESA\usuario.</small></div></article>
+            <article><span>B5</span><div><h5>Rutas de acceso</h5><p>Para el laboratorio conserve: base de datos <code>C:\Windows\NTDS</code>, archivos de registro <code>C:\Windows\NTDS</code> y SYSVOL <code>C:\Windows\SYSVOL</code>. Pulse <strong>Siguiente</strong>.</p><small>En producción, las rutas pueden ubicarse en volúmenes separados según el diseño de rendimiento, capacidad, copia de seguridad y recuperación.</small></div></article>
+            <article><span>B6</span><div><h5>Revisar opciones</h5><p>Revise dominio, nivel funcional, DNS, catálogo global, sitio, rutas y NetBIOS. Pulse <strong>Ver script</strong> si quiere guardar el equivalente de PowerShell para documentación. Después pulse <strong>Siguiente</strong>.</p><small>La contraseña DSRM no se muestra ni se exporta en texto claro.</small></div></article>
+            <article><span>B7</span><div><h5>Comprobación de requisitos previos</h5><p>Espere a que terminen las pruebas de red, DNS, permisos y configuración. Debe aparecer <strong>Todas las comprobaciones de requisitos previos se realizaron correctamente</strong>. Lea las advertencias; corrija cualquier elemento marcado como error antes de continuar.</p><small>La advertencia sobre delegación DNS puede aceptarse en este bosque nuevo de laboratorio. Una dirección IP dinámica, un error de DNS o un reinicio pendiente sí deben corregirse.</small></div></article>
+            <article><span>B8</span><div><h5>Instalación y reinicio</h5><p>Pulse <strong>Instalar</strong>. No apague la VM ni cierre forzosamente la sesión. El asistente crea el bosque, instala y configura DNS, genera SYSVOL/NETLOGON y reinicia DC01 automáticamente.</p><small>Después del reinicio, el inicio de sesión cambia de cuenta local a cuenta del dominio EMPRESA.</small></div></article>
+          </div>
+
+          <div class="callout info"><span>i</span><div><strong>Páginas que pueden no aparecer</strong><p><strong>Opciones de preparación</strong> aparece principalmente al ampliar un bosque o dominio existente cuando se necesitan credenciales para ejecutar Adprep. Las opciones de origen de replicación e instalación desde medios también corresponden a controladores adicionales. No son necesarias al crear este primer bosque.</p></div></div>
+
           <h4>Método PowerShell equivalente</h4>
           <div class="code-card large"><div class="code-head"><span>PowerShell · rol y nuevo bosque</span><button class="copy-button" type="button">Copiar</button></div><pre><code>Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
 
@@ -442,13 +460,13 @@ Install-ADDSForest `
 
 # El asistente solicita la contraseña DSRM y reinicia el servidor.</code></pre></div>
           <div class="callout info"><span>i</span><div><strong>Nivel funcional correcto</strong><p>Windows Server 2019 y 2022 utilizan Windows Server 2016 como nivel funcional más reciente. No existe un nivel funcional “Windows Server 2022”.</p></div></div>
-          <div class="ad-evidence"><strong>Captura 2 · Promoción</strong><p>Incluya Configuración de implementación con “Agregar un nuevo bosque”, el dominio y Opciones del controlador. Oculte la contraseña DSRM.</p></div>
+          <div class="ad-evidence"><strong>Capturas 2D–2H · Promoción</strong><p>Incluya Configuración de implementación, Opciones del controlador, Opciones de DNS, Opciones adicionales, Rutas de acceso, Revisar opciones y Comprobación de requisitos previos. Oculte la contraseña DSRM.</p></div>
 
           <h3 class="subheading">4. Configuración posterior: DNS y salud</h3>
           <ol class="procedure-list">
             <li><span>1</span><p>Inicie sesión como <code>EMPRESA\Administrator</code> o <code>Administrator@ad.empresa.example</code>.</p></li>
-            <li><span>2</span><p>En Server Manager confirme que aparecen AD DS y DNS. Abra DNS Manager y compruebe las zonas <code>ad.empresa.example</code> y <code>_msdcs.ad.empresa.example</code>.</p></li>
-            <li><span>3</span><p>En propiedades del servidor DNS → Forwarders agregue los resolvedores autorizados por la organización. No configure DNS públicos directamente en la tarjeta de red del DC ni de los clientes.</p></li>
+            <li><span>2</span><p>En el <strong>Administrador del servidor</strong> confirme que aparecen AD DS y DNS. Abra <strong>Herramientas → DNS</strong> y compruebe las zonas <code>ad.empresa.example</code> y <code>_msdcs.ad.empresa.example</code>.</p></li>
+            <li><span>3</span><p>En la consola DNS haga clic derecho sobre DC01 → <strong>Propiedades → Reenviadores → Editar</strong> y agregue los resolvedores autorizados por la organización. No configure DNS públicos directamente en la tarjeta de red del DC ni de los clientes.</p></li>
             <li><span>4</span><p>Verifique los registros A y SRV, SYSVOL y NETLOGON. Los clientes localizan el dominio mediante registros SRV de DNS.</p></li>
           </ol>
           <div class="code-card large"><div class="code-head"><span>PowerShell / CMD · comprobación inicial</span><button class="copy-button" type="button">Copiar</button></div><pre><code>Get-ADForest
@@ -461,11 +479,11 @@ nslookup -type=SRV _ldap._tcp.dc._msdcs.ad.empresa.example</code></pre></div>
           <h3 class="subheading" id="ad-objects">5. Crear OUs, grupos y usuarios</h3>
           <p>Las unidades organizativas permiten ordenar objetos y aplicar directivas. Los grupos representan permisos; los usuarios representan personas. Evite asignar permisos recurso por recurso a cada usuario.</p>
           <ol class="procedure-list">
-            <li><span>1</span><p>Abra <strong>Tools → Active Directory Users and Computers</strong>.</p></li>
+            <li><span>1</span><p>Abra <strong>Herramientas → Usuarios y equipos de Active Directory</strong>.</p></li>
             <li><span>2</span><p>En la raíz del dominio cree la OU <strong>Empresa</strong>. Dentro cree <strong>Usuarios</strong>, <strong>Equipos</strong> y <strong>Grupos</strong>.</p></li>
             <li><span>3</span><p>En Usuarios cree <strong>Ana Torres</strong> (<code>atorres</code>) y <strong>Luis Gómez</strong> (<code>lgomez</code>). Use contraseñas temporales únicas y active el cambio en el siguiente inicio.</p></li>
             <li><span>4</span><p>En Grupos cree <strong>GG-Ventas</strong> como grupo Global de Seguridad y agregue a Ana Torres.</p></li>
-            <li><span>5</span><p>En Group Policy Management cree <strong>GPO-Base-Usuarios</strong>, vincúlela a la OU Usuarios y configure una directiva sencilla, por ejemplo protector de pantalla protegido por contraseña con espera de 900 segundos.</p></li>
+            <li><span>5</span><p>Abra <strong>Herramientas → Administración de directivas de grupo</strong>. Cree <strong>GPO-Base-Usuarios</strong>, vincúlela a la OU Usuarios y configure una directiva sencilla, por ejemplo protector de pantalla protegido por contraseña con espera de 900 segundos.</p></li>
           </ol>
           <div class="code-card large"><div class="code-head"><span>PowerShell · estructura de ejemplo</span><button class="copy-button" type="button">Copiar</button></div><pre><code>$base = "DC=ad,DC=empresa,DC=example"
 New-ADOrganizationalUnit -Name "Empresa" -Path $base
@@ -498,12 +516,12 @@ Add-ADGroupMember -Identity "GG-Ventas" -Members "atorres"</code></pre></div>
           <p>Repita el proceso con IP <code>192.168.10.22</code>. Si clona una plantilla, ejecute primero <code>sysprep /generalize /oobe /shutdown</code>; no copie directamente un Windows ya configurado y encendido.</p>
           <h4>Unir ambos equipos al dominio</h4>
           <ol class="procedure-list">
-            <li><span>1</span><p>Inicie con la cuenta administrativa local. Abra <strong>Settings → System → About → Domain or workgroup</strong>.</p></li>
-            <li><span>2</span><p>Pulse <strong>Change</strong>, seleccione <strong>Domain</strong> y escriba <code>ad.empresa.example</code>.</p></li>
+            <li><span>1</span><p>Inicie con la cuenta administrativa local. Abra <strong>Configuración → Sistema → Información → Configuración avanzada del sistema</strong>. En la pestaña <strong>Nombre de equipo</strong>, pulse <strong>Cambiar</strong>.</p></li>
+            <li><span>2</span><p>En <strong>Miembro de</strong> seleccione <strong>Dominio</strong>, escriba <code>ad.empresa.example</code> y pulse <strong>Aceptar</strong>.</p></li>
             <li><span>3</span><p>Cuando se solicite, use una cuenta autorizada, por ejemplo <code>EMPRESA\Administrator</code>. En producción use una cuenta con permisos delegados para unir equipos.</p></li>
             <li><span>4</span><p>Confirme el mensaje de bienvenida al dominio y reinicie.</p></li>
-            <li><span>5</span><p>En el inicio de sesión seleccione Otro usuario e ingrese <code>EMPRESA\atorres</code> en PC-VENTAS01. Use <code>EMPRESA\lgomez</code> en PC-TI01.</p></li>
-            <li><span>6</span><p>En AD Users and Computers mueva los objetos desde Computers a <strong>OU=Equipos,OU=Empresa</strong> para que reciban las GPO vinculadas.</p></li>
+            <li><span>5</span><p>En el inicio de sesión seleccione <strong>Otro usuario</strong> e ingrese <code>EMPRESA\atorres</code> en PC-VENTAS01. Use <code>EMPRESA\lgomez</code> en PC-TI01.</p></li>
+            <li><span>6</span><p>En <strong>Usuarios y equipos de Active Directory</strong> mueva los objetos desde el contenedor <strong>Computers</strong> a <strong>OU=Equipos,OU=Empresa</strong> para que reciban las GPO vinculadas.</p></li>
           </ol>
           <div class="code-card large"><div class="code-head"><span>PowerShell · alternativa para unir cada cliente</span><button class="copy-button" type="button">Copiar</button></div><pre><code>Resolve-DnsName ad.empresa.example
 Add-Computer -DomainName "ad.empresa.example" `
@@ -669,10 +687,11 @@ VMConnect.exe localhost $vmName</code></pre>
             <a href="https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/naming-conventions-for-computer-domain-site-ou" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Convenciones y límites para nombres de equipo</strong><b>↗</b></a>
             <a href="https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/remotepc/change-listening-port" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Escritorio remoto y puerto de escucha</strong><b>↗</b></a>
             <a href="https://learn.microsoft.com/en-us/defender-endpoint/microsoft-defender-antivirus-on-windows-server" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Defender Antivirus en Windows Server</strong><b>↗</b></a>
-            <a href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/deploy/install-active-directory-domain-services--level-100-" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Instalar Active Directory Domain Services</strong><b>↗</b></a>
-            <a href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/active-directory-functional-levels" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Niveles funcionales de Active Directory</strong><b>↗</b></a>
-            <a href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/join-computer-to-domain" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Unir un equipo a un dominio</strong><b>↗</b></a>
-            <a href="https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/best-practices-for-dns-client-settings" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Configuración recomendada de clientes DNS</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/identity/ad-ds/deploy/install-active-directory-domain-services--level-100-" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Instalar Servicios de dominio de Active Directory</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/identity/ad-ds/deploy/ad-ds-installation-and-removal-wizard-page-descriptions" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Páginas del asistente de configuración de AD DS</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/identity/ad-ds/active-directory-functional-levels" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Niveles funcionales de Active Directory</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/identity/ad-ds/manage/join-computer-to-domain" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Unir un equipo a un dominio</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/troubleshoot/windows-server/networking/best-practices-for-dns-client-settings" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Configuración recomendada de clientes DNS</strong><b>↗</b></a>
             <a href="https://youtu.be/OnKzOt2JCxs" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 5 · Acceso Administrador</strong><b>↗</b></a>
             <a href="https://youtu.be/7PYvZAwkYOw" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 6 · Eventos de apagado</strong><b>↗</b></a>
             <a href="https://youtu.be/hsk4Q-6Zp1A" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 7 · Primeras actualizaciones</strong><b>↗</b></a>
