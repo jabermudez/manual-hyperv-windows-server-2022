@@ -44,7 +44,7 @@
           <a class="button button-glass" href="lecciones/01-conceptos-clave.html">Comenzar por la lección 1</a>
         </div>
         <div class="hero-metrics" aria-label="Resumen del manual">
-          <div><strong>28</strong><span>lecciones ordenadas</span></div>
+          <div><strong>29</strong><span>lecciones ordenadas</span></div>
           <div><strong>1</strong><span>laboratorio funcional</span></div>
           <div><strong>GUI + PS</strong><span>dos métodos</span></div>
         </div>
@@ -54,7 +54,7 @@
 
   <main>
     <section class="lesson-catalog section-shell" id="lecciones">
-      <div class="catalog-heading"><div><span class="kicker">Ruta completa de aprendizaje</span><h2>Todas las lecciones, en un solo recorrido</h2><p>Avance en orden o seleccione el tema que necesite. Cada tarjeta abre una página dedicada con contexto, procedimiento, evidencia y navegación secuencial.</p></div><strong id="catalogCount">28 lecciones</strong></div>
+      <div class="catalog-heading"><div><span class="kicker">Ruta completa de aprendizaje</span><h2>Todas las lecciones, en un solo recorrido</h2><p>Avance en orden o seleccione el tema que necesite. Cada tarjeta abre una página dedicada con contexto, procedimiento, evidencia y navegación secuencial.</p></div><strong id="catalogCount">29 lecciones</strong></div>
       <div id="lessonCatalog"></div>
     </section>
     <section class="overview section-shell" id="ruta">
@@ -372,6 +372,182 @@ Set-DnsClientServerAddress -InterfaceAlias "Ethernet" `
           <div class="callout danger"><span>!</span><div><strong>No copie direcciones sin adaptarlas</strong><p>La IP del ejemplo puede entrar en conflicto con su red. Use el direccionamiento asignado por el instructor o administrador.</p></div></div>
         </section>
 
+        <section class="chapter ad-module-source" id="active-directory-module">
+          <div class="chapter-number">AD</div>
+          <div class="chapter-title"><span>Módulo especial</span><h2>Implementar Active Directory Domain Services</h2></div>
+          <p class="lead">En este laboratorio convertirá <strong>DC01</strong> en controlador del dominio <strong>ad.empresa.example</strong>, configurará DNS, organizará usuarios y grupos, aplicará una directiva básica y unirá dos equipos Windows 11 Pro.</p>
+
+          <div class="callout info"><span>i</span><div><strong>Qué resuelve Active Directory</strong><p>AD DS centraliza identidades, equipos, autenticación y autorización. DNS permite localizar controladores y servicios; Kerberos autentica; LDAP consulta el directorio; las directivas de grupo estandarizan la configuración.</p></div></div>
+
+          <div class="ad-architecture" role="img" aria-label="Dos clientes conectados por red al controlador de dominio DC01 con Active Directory, DNS, Kerberos y LDAP">
+            <div class="ad-client"><b>PC-VENTAS01</b><span>192.168.10.21</span></div><i>Red / DNS</i>
+            <div class="ad-dc"><small>Controlador de dominio</small><strong>DC01</strong><span>AD DS · DNS · Kerberos · LDAP</span><b>192.168.10.10</b></div><i>Red / DNS</i>
+            <div class="ad-client"><b>PC-TI01</b><span>192.168.10.22</span></div>
+          </div>
+
+          <nav class="module-jump" aria-label="Contenido del módulo Active Directory">
+            <a href="#ad-plan">1. Plan</a><a href="#ad-server">2. Servidor</a><a href="#ad-role">3. AD DS</a><a href="#ad-objects">4. Objetos</a><a href="#ad-clients">5. Clientes</a><a href="#ad-verify">6. Validación</a>
+          </nav>
+
+          <h3 class="subheading" id="ad-plan">1. Diseño y requisitos del laboratorio</h3>
+          <p>Defina los nombres y direcciones antes de instalar el rol. Después de crear el bosque, cambiar el nombre DNS del dominio implica una migración compleja.</p>
+          <div class="ad-plan-grid">
+            <article><span>Servidor</span><h4>DC01</h4><ul><li>Windows Server 2022 actualizado</li><li>2 vCPU, 4 GB RAM y 60 GB de disco como mínimo de laboratorio</li><li>IP 192.168.10.10/24</li><li>Gateway 192.168.10.1</li><li>DNS preferido 192.168.10.10</li></ul></article>
+            <article><span>Dominio</span><h4>ad.empresa.example</h4><ul><li>NetBIOS: EMPRESA</li><li>Nivel de bosque: Windows Server 2016</li><li>Nivel de dominio: Windows Server 2016</li><li>DNS integrado en Active Directory</li><li>Contraseña DSRM diferente y protegida</li></ul></article>
+            <article><span>Clientes</span><h4>Dos Windows 11 Pro</h4><ul><li>PC-VENTAS01 · 192.168.10.21</li><li>PC-TI01 · 192.168.10.22</li><li>2 vCPU, 4 GB RAM y 64 GB de disco</li><li>Mismo conmutador virtual que DC01</li><li>DNS: únicamente 192.168.10.10</li></ul></article>
+          </div>
+          <div class="callout warning"><span>!</span><div><strong>Edición del cliente</strong><p>Windows Home no puede unirse a un dominio de Active Directory local. Use Windows 10/11 Pro, Enterprise, Pro Education o Pro for Workstations.</p></div></div>
+          <div class="lesson-note"><strong>Producción</strong><p>Use un subdominio de un nombre DNS que controle la organización. <code>.local</code> puede entrar en conflicto con mDNS; <code>.example</code> se utiliza aquí solo como nombre reservado para documentación.</p></div>
+
+          <h3 class="subheading" id="ad-server">2. Preparar Windows Server 2022</h3>
+          <ol class="procedure-list">
+            <li><span>1</span><p>Conecte DC01 y los clientes al mismo vSwitch interno o privado. Si necesita descargar actualizaciones, use temporalmente una interfaz externa controlada.</p></li>
+            <li><span>2</span><p>Instale todas las actualizaciones, seleccione la zona horaria correcta y confirme que el reloj sea preciso.</p></li>
+            <li><span>3</span><p>Cambie el nombre del servidor a <strong>DC01</strong> y reinicie. Hágalo antes de promoverlo.</p></li>
+            <li><span>4</span><p>Configure IPv4 estática: IP <code>192.168.10.10</code>, prefijo <code>/24</code>, gateway <code>192.168.10.1</code> y DNS <code>192.168.10.10</code>.</p></li>
+            <li><span>5</span><p>Ejecute <code>hostname</code>, <code>ipconfig /all</code> y <code>ping 192.168.10.1</code>. Corrija cualquier error antes de continuar.</p></li>
+          </ol>
+          <div class="code-card large"><div class="code-head"><span>PowerShell · identidad y red de DC01</span><button class="copy-button" type="button">Copiar</button></div><pre><code>Rename-Computer -NewName "DC01" -Restart
+
+# Después del reinicio, adapte el nombre real de la interfaz
+Get-NetAdapter
+New-NetIPAddress -InterfaceAlias "Ethernet" `
+  -IPAddress 192.168.10.10 -PrefixLength 24 `
+  -DefaultGateway 192.168.10.1
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" `
+  -ServerAddresses 192.168.10.10</code></pre></div>
+          <div class="ad-evidence"><strong>Captura 1 · Preparación</strong><p>Debe mostrar Server Manager con nombre DC01 y las propiedades IPv4. No exponga contraseñas ni direcciones públicas.</p></div>
+
+          <h3 class="subheading" id="ad-role">3. Instalar AD DS y crear el bosque</h3>
+          <h4>Método gráfico</h4>
+          <ol class="procedure-list">
+            <li><span>1</span><p>Abra <strong>Server Manager → Manage → Add Roles and Features</strong>.</p></li>
+            <li><span>2</span><p>Seleccione <strong>Role-based or feature-based installation</strong>, el servidor DC01 y luego <strong>Active Directory Domain Services</strong>.</p></li>
+            <li><span>3</span><p>Pulse <strong>Add Features</strong>, continúe hasta Confirmación y seleccione <strong>Install</strong>.</p></li>
+            <li><span>4</span><p>Al finalizar, pulse la bandera amarilla y <strong>Promote this server to a domain controller</strong>. Instalar el rol no convierte todavía al servidor en DC.</p></li>
+            <li><span>5</span><p>Seleccione <strong>Add a new forest</strong> e introduzca <code>ad.empresa.example</code>.</p></li>
+            <li><span>6</span><p>En opciones del controlador conserve DNS y Global Catalog activados; no marque RODC. Elija nivel funcional <strong>Windows Server 2016</strong> para bosque y dominio.</p></li>
+            <li><span>7</span><p>Defina una contraseña DSRM robusta y distinta de Administrator. Se usa para recuperación offline del directorio.</p></li>
+            <li><span>8</span><p>En DNS puede aparecer una advertencia de delegación en un bosque nuevo de laboratorio; revise el mensaje y continúe si no existe una zona padre administrada.</p></li>
+            <li><span>9</span><p>Confirme el nombre NetBIOS <strong>EMPRESA</strong>. Mantenga las rutas predeterminadas para base de datos, registros y SYSVOL en el laboratorio.</p></li>
+            <li><span>10</span><p>Revise los requisitos previos, pulse <strong>Install</strong> y permita el reinicio automático.</p></li>
+          </ol>
+          <h4>Método PowerShell equivalente</h4>
+          <div class="code-card large"><div class="code-head"><span>PowerShell · rol y nuevo bosque</span><button class="copy-button" type="button">Copiar</button></div><pre><code>Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
+
+Install-ADDSForest `
+  -DomainName "ad.empresa.example" `
+  -DomainNetbiosName "EMPRESA" `
+  -InstallDNS
+
+# El asistente solicita la contraseña DSRM y reinicia el servidor.</code></pre></div>
+          <div class="callout info"><span>i</span><div><strong>Nivel funcional correcto</strong><p>Windows Server 2019 y 2022 utilizan Windows Server 2016 como nivel funcional más reciente. No existe un nivel funcional “Windows Server 2022”.</p></div></div>
+          <div class="ad-evidence"><strong>Captura 2 · Promoción</strong><p>Incluya Configuración de implementación con “Agregar un nuevo bosque”, el dominio y Opciones del controlador. Oculte la contraseña DSRM.</p></div>
+
+          <h3 class="subheading">4. Configuración posterior: DNS y salud</h3>
+          <ol class="procedure-list">
+            <li><span>1</span><p>Inicie sesión como <code>EMPRESA\Administrator</code> o <code>Administrator@ad.empresa.example</code>.</p></li>
+            <li><span>2</span><p>En Server Manager confirme que aparecen AD DS y DNS. Abra DNS Manager y compruebe las zonas <code>ad.empresa.example</code> y <code>_msdcs.ad.empresa.example</code>.</p></li>
+            <li><span>3</span><p>En propiedades del servidor DNS → Forwarders agregue los resolvedores autorizados por la organización. No configure DNS públicos directamente en la tarjeta de red del DC ni de los clientes.</p></li>
+            <li><span>4</span><p>Verifique los registros A y SRV, SYSVOL y NETLOGON. Los clientes localizan el dominio mediante registros SRV de DNS.</p></li>
+          </ol>
+          <div class="code-card large"><div class="code-head"><span>PowerShell / CMD · comprobación inicial</span><button class="copy-button" type="button">Copiar</button></div><pre><code>Get-ADForest
+Get-ADDomain
+Get-ADDomainController
+dcdiag /v
+dcdiag /test:DNS
+nslookup -type=SRV _ldap._tcp.dc._msdcs.ad.empresa.example</code></pre></div>
+
+          <h3 class="subheading" id="ad-objects">5. Crear OUs, grupos y usuarios</h3>
+          <p>Las unidades organizativas permiten ordenar objetos y aplicar directivas. Los grupos representan permisos; los usuarios representan personas. Evite asignar permisos recurso por recurso a cada usuario.</p>
+          <ol class="procedure-list">
+            <li><span>1</span><p>Abra <strong>Tools → Active Directory Users and Computers</strong>.</p></li>
+            <li><span>2</span><p>En la raíz del dominio cree la OU <strong>Empresa</strong>. Dentro cree <strong>Usuarios</strong>, <strong>Equipos</strong> y <strong>Grupos</strong>.</p></li>
+            <li><span>3</span><p>En Usuarios cree <strong>Ana Torres</strong> (<code>atorres</code>) y <strong>Luis Gómez</strong> (<code>lgomez</code>). Use contraseñas temporales únicas y active el cambio en el siguiente inicio.</p></li>
+            <li><span>4</span><p>En Grupos cree <strong>GG-Ventas</strong> como grupo Global de Seguridad y agregue a Ana Torres.</p></li>
+            <li><span>5</span><p>En Group Policy Management cree <strong>GPO-Base-Usuarios</strong>, vincúlela a la OU Usuarios y configure una directiva sencilla, por ejemplo protector de pantalla protegido por contraseña con espera de 900 segundos.</p></li>
+          </ol>
+          <div class="code-card large"><div class="code-head"><span>PowerShell · estructura de ejemplo</span><button class="copy-button" type="button">Copiar</button></div><pre><code>$base = "DC=ad,DC=empresa,DC=example"
+New-ADOrganizationalUnit -Name "Empresa" -Path $base
+New-ADOrganizationalUnit -Name "Usuarios" -Path "OU=Empresa,$base"
+New-ADOrganizationalUnit -Name "Equipos" -Path "OU=Empresa,$base"
+New-ADOrganizationalUnit -Name "Grupos" -Path "OU=Empresa,$base"
+
+$tempPassword = Read-Host "Contraseña temporal" -AsSecureString
+New-ADUser -Name "Ana Torres" -SamAccountName "atorres" `
+  -UserPrincipalName "atorres@ad.empresa.example" `
+  -Path "OU=Usuarios,OU=Empresa,$base" `
+  -AccountPassword $tempPassword -Enabled $true `
+  -ChangePasswordAtLogon $true
+
+New-ADGroup -Name "GG-Ventas" -GroupScope Global `
+  -GroupCategory Security -Path "OU=Grupos,OU=Empresa,$base"
+Add-ADGroupMember -Identity "GG-Ventas" -Members "atorres"</code></pre></div>
+          <div class="ad-evidence"><strong>Captura 3 · Directorio</strong><p>Muestre el árbol Empresa con sus tres OUs, las dos cuentas y las propiedades del grupo GG‑Ventas.</p></div>
+
+          <h3 class="subheading" id="ad-clients">6. Instalar y unir dos equipos Windows 11 Pro</h3>
+          <h4>Crear e instalar PC-VENTAS01</h4>
+          <ol class="procedure-list">
+            <li><span>1</span><p>En Hyper-V cree una VM Generación 2 llamada <strong>PC-VENTAS01</strong>: 4 GB RAM, 2 vCPU, VHDX de 64 GB y el mismo vSwitch de DC01.</p></li>
+            <li><span>2</span><p>Monte una ISO oficial de Windows 11, inicie desde DVD e instale <strong>Windows 11 Pro</strong>. Cree una cuenta administrativa local para la preparación.</p></li>
+            <li><span>3</span><p>Instale actualizaciones, cambie el nombre a PC-VENTAS01 y reinicie.</p></li>
+            <li><span>4</span><p>Configure IP <code>192.168.10.21/24</code>, gateway <code>192.168.10.1</code> y DNS preferido <code>192.168.10.10</code>.</p></li>
+            <li><span>5</span><p>Pruebe <code>ping 192.168.10.10</code> y <code>Resolve-DnsName ad.empresa.example</code>. La resolución DNS debe funcionar antes de unir el equipo.</p></li>
+          </ol>
+          <h4>Crear e instalar PC-TI01</h4>
+          <p>Repita el proceso con IP <code>192.168.10.22</code>. Si clona una plantilla, ejecute primero <code>sysprep /generalize /oobe /shutdown</code>; no copie directamente un Windows ya configurado y encendido.</p>
+          <h4>Unir ambos equipos al dominio</h4>
+          <ol class="procedure-list">
+            <li><span>1</span><p>Inicie con la cuenta administrativa local. Abra <strong>Settings → System → About → Domain or workgroup</strong>.</p></li>
+            <li><span>2</span><p>Pulse <strong>Change</strong>, seleccione <strong>Domain</strong> y escriba <code>ad.empresa.example</code>.</p></li>
+            <li><span>3</span><p>Cuando se solicite, use una cuenta autorizada, por ejemplo <code>EMPRESA\Administrator</code>. En producción use una cuenta con permisos delegados para unir equipos.</p></li>
+            <li><span>4</span><p>Confirme el mensaje de bienvenida al dominio y reinicie.</p></li>
+            <li><span>5</span><p>En el inicio de sesión seleccione Otro usuario e ingrese <code>EMPRESA\atorres</code> en PC-VENTAS01. Use <code>EMPRESA\lgomez</code> en PC-TI01.</p></li>
+            <li><span>6</span><p>En AD Users and Computers mueva los objetos desde Computers a <strong>OU=Equipos,OU=Empresa</strong> para que reciban las GPO vinculadas.</p></li>
+          </ol>
+          <div class="code-card large"><div class="code-head"><span>PowerShell · alternativa para unir cada cliente</span><button class="copy-button" type="button">Copiar</button></div><pre><code>Resolve-DnsName ad.empresa.example
+Add-Computer -DomainName "ad.empresa.example" `
+  -Credential (Get-Credential "EMPRESA\Administrator") `
+  -Restart</code></pre></div>
+          <div class="ad-evidence"><strong>Capturas 4 y 5 · Clientes</strong><p>Incluya la configuración DNS, el mensaje de bienvenida y el primer inicio con una cuenta de dominio en cada equipo.</p></div>
+
+          <h3 class="subheading" id="ad-verify">7. Validar la implementación</h3>
+          <div class="validation-table" role="table" aria-label="Pruebas de Active Directory">
+            <div class="table-row table-head"><span>Prueba</span><span>Comando</span><span>Resultado esperado</span></div>
+            <div class="table-row"><span>Identidad</span><code>whoami</code><span>empresa\atorres o empresa\lgomez</span></div>
+            <div class="table-row"><span>Controlador</span><code>nltest /dsgetdc:ad.empresa.example</code><span>DC01 y dirección correcta</span></div>
+            <div class="table-row"><span>Sesión</span><code>echo %logonserver%</code><span>\\DC01</span></div>
+            <div class="table-row"><span>DNS</span><code>nslookup DC01.ad.empresa.example</code><span>192.168.10.10</span></div>
+            <div class="table-row"><span>Directivas</span><code>gpupdate /force</code><span>Actualización completada</span></div>
+            <div class="table-row"><span>Resultado GPO</span><code>gpresult /r</code><span>GPO-Base-Usuarios aplicada</span></div>
+          </div>
+          <div class="ad-success"><span>✓</span><div><strong>Criterio de éxito</strong><p>Los dos clientes resuelven el dominio mediante DC01, se unen sin error, reinician, aceptan credenciales de usuarios del dominio y reciben las directivas correspondientes.</p></div></div>
+
+          <h3 class="subheading">8. Problemas frecuentes</h3>
+          <div class="accordion">
+            <details><summary><span>“No se pudo encontrar el dominio”</span><b>+</b></summary><div><p>Revise que el DNS del cliente sea 192.168.10.10, no el router ni un DNS público. Pruebe los registros SRV con <code>nslookup -type=SRV _ldap._tcp.dc._msdcs.ad.empresa.example</code>.</p></div></details>
+            <details><summary><span>La unión pide credenciales repetidamente</span><b>+</b></summary><div><p>Use EMPRESA\usuario o usuario@ad.empresa.example, confirme permisos de unión y revise <code>%windir%\debug\NetSetup.log</code>.</p></div></details>
+            <details><summary><span>Kerberos o inicio de sesión falla</span><b>+</b></summary><div><p>Compruebe fecha, zona horaria y sincronización. Una diferencia de reloj puede impedir la autenticación Kerberos.</p></div></details>
+            <details><summary><span>La GPO no se aplica</span><b>+</b></summary><div><p>Mueva el objeto a la OU correcta, ejecute <code>gpupdate /force</code> y revise <code>gpresult /h C:\Temp\gpo.html</code>.</p></div></details>
+          </div>
+
+          <h3 class="subheading">9. Recomendaciones para producción</h3>
+          <div class="practice-grid">
+            <div><h3>Disponibilidad</h3><ul><li>Implemente al menos dos DC/DNS.</li><li>Realice copia de seguridad del estado del sistema.</li><li>Pruebe restauración y contraseña DSRM.</li></ul></div>
+            <div><h3>Seguridad</h3><ul><li>No use Domain Admin para tareas diarias.</li><li>Delegue la unión de equipos a una OU.</li><li>Implemente Windows LAPS para administradores locales.</li></ul></div>
+            <div><h3>Operación</h3><ul><li>Supervise dcdiag, DNS y eventos.</li><li>Documente OUs, GPO y grupos.</li><li>Agregue DNS externos solo como reenviadores.</li></ul></div>
+          </div>
+          <div class="checklist" data-checklist="active-directory-lab">
+            <label><input type="checkbox"><span>DC01 tiene nombre definitivo, hora correcta e IP estática.</span></label>
+            <label><input type="checkbox"><span>AD DS y DNS están instalados y el bosque funciona.</span></label>
+            <label><input type="checkbox"><span>dcdiag y la prueba DNS no muestran errores críticos.</span></label>
+            <label><input type="checkbox"><span>OUs, usuarios y GG-Ventas están creados.</span></label>
+            <label><input type="checkbox"><span>PC-VENTAS01 y PC-TI01 usan DC01 como DNS.</span></label>
+            <label><input type="checkbox"><span>Los dos clientes pertenecen al dominio e inician sesión.</span></label>
+            <label><input type="checkbox"><span>La GPO de ejemplo se aplica correctamente.</span></label>
+          </div>
+        </section>
+
         <section class="chapter" id="validacion">
           <div class="chapter-number">10</div>
           <div class="chapter-title"><span>Control de calidad</span><h2>Validar que el laboratorio funciona</h2></div>
@@ -493,6 +669,10 @@ VMConnect.exe localhost $vmName</code></pre>
             <a href="https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/naming-conventions-for-computer-domain-site-ou" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Convenciones y límites para nombres de equipo</strong><b>↗</b></a>
             <a href="https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/remotepc/change-listening-port" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Escritorio remoto y puerto de escucha</strong><b>↗</b></a>
             <a href="https://learn.microsoft.com/en-us/defender-endpoint/microsoft-defender-antivirus-on-windows-server" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Defender Antivirus en Windows Server</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/deploy/install-active-directory-domain-services--level-100-" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Instalar Active Directory Domain Services</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/active-directory-functional-levels" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Niveles funcionales de Active Directory</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/join-computer-to-domain" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Unir un equipo a un dominio</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/best-practices-for-dns-client-settings" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Configuración recomendada de clientes DNS</strong><b>↗</b></a>
             <a href="https://youtu.be/OnKzOt2JCxs" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 5 · Acceso Administrador</strong><b>↗</b></a>
             <a href="https://youtu.be/7PYvZAwkYOw" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 6 · Eventos de apagado</strong><b>↗</b></a>
             <a href="https://youtu.be/hsk4Q-6Zp1A" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 7 · Primeras actualizaciones</strong><b>↗</b></a>

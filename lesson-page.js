@@ -43,4 +43,10 @@
   document.getElementById('themeToggle').addEventListener('click',()=>{const dark=root.dataset.theme!=='dark';root.dataset.theme=dark?'dark':'light';localStorage.setItem('manual-theme',dark?'dark':'light');});
   document.getElementById('printButton').addEventListener('click',()=>window.print());
   document.querySelectorAll('.copy-button').forEach((button)=>button.addEventListener('click',async()=>{const code=button.closest('.code-card').querySelector('code').textContent;await navigator.clipboard.writeText(code);button.textContent='Copiado';setTimeout(()=>button.textContent='Copiar',1400);}));
+  document.querySelectorAll('[data-checklist]').forEach((checklist)=>{
+    const key=`checklist-${checklist.dataset.checklist}`;
+    const boxes=[...checklist.querySelectorAll('input[type="checkbox"]')];
+    const state=JSON.parse(localStorage.getItem(key)||'[]');
+    boxes.forEach((box,boxIndex)=>{box.checked=Boolean(state[boxIndex]);box.addEventListener('change',()=>localStorage.setItem(key,JSON.stringify(boxes.map((item)=>item.checked))));});
+  });
 })().catch(()=>{document.getElementById('lessonContent').innerHTML='<div class="callout danger"><span>!</span><div><strong>No se pudo cargar la lección</strong><p>Actualice la página o vuelva a la portada del curso.</p></div></div>';});

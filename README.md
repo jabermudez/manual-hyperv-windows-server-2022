@@ -1,6 +1,6 @@
 # Manual web: Hyper-V y Windows Server 2022
 
-Sitio web estático y adaptable con una ruta unificada de 28 lecciones sobre Hyper-V y administración de Windows Server 2022.
+Sitio web estático y adaptable con una ruta unificada de 29 lecciones sobre Hyper-V, Windows Server 2022 y un módulo especial de Active Directory Domain Services.
 
 ## Vista local
 

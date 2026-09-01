@@ -23,9 +23,10 @@ window.LESSON_MAP = [
   {id:22,slug:'22-regla-entrada',phase:'Seguridad',title:'Crear una regla de entrada',summary:'TCP, puerto local, perfiles, alcance y comprobación.',course:18},
   {id:23,slug:'23-reglas-salida',phase:'Seguridad',title:'Crear reglas de salida',summary:'Bloqueo por puerto y por programa.',course:19},
   {id:24,slug:'24-administrar-servicios',phase:'Operación',title:'Administración de servicios',summary:'Inicio, cuentas, recuperación y dependencias.',course:20},
-  {id:25,slug:'25-validacion-laboratorio',phase:'Cierre',title:'Validar el laboratorio',summary:'Pruebas de host, VM, red, DNS y HTTPS.',source:'validacion'},
-  {id:26,slug:'26-solucion-problemas',phase:'Cierre',title:'Solución de problemas frecuentes',summary:'Diagnóstico de Hyper-V, red, arranque y rendimiento.',source:'problemas'},
-  {id:27,slug:'27-automatizacion-powershell',phase:'Cierre',title:'Automatización con PowerShell',summary:'Creación reproducible de la máquina virtual.',source:'automatizacion'},
-  {id:28,slug:'28-evidencias-buenas-practicas',phase:'Cierre',title:'Evidencias y buenas prácticas',summary:'Checklist, documentación, seguridad y glosario.',source:'evidencias'}
+  {id:25,slug:'25-active-directory',phase:'Módulo especial · Active Directory',title:'Implementar Active Directory Domain Services',summary:'Controlador de dominio, DNS, usuarios, grupos, GPO y unión de dos clientes.',source:'active-directory-module',featured:true},
+  {id:26,slug:'25-validacion-laboratorio',phase:'Cierre',title:'Validar el laboratorio',summary:'Pruebas de host, VM, red, DNS y HTTPS.',source:'validacion'},
+  {id:27,slug:'26-solucion-problemas',phase:'Cierre',title:'Solución de problemas frecuentes',summary:'Diagnóstico de Hyper-V, red, arranque y rendimiento.',source:'problemas'},
+  {id:28,slug:'27-automatizacion-powershell',phase:'Cierre',title:'Automatización con PowerShell',summary:'Creación reproducible de la máquina virtual.',source:'automatizacion'},
+  {id:29,slug:'28-evidencias-buenas-practicas',phase:'Cierre',title:'Evidencias y buenas prácticas',summary:'Checklist, documentación, seguridad y glosario.',source:'evidencias'}
 ];
 window.lessonHref = (lesson) => `lecciones/${lesson.slug}.html`;
