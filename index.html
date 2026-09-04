@@ -375,31 +375,57 @@ Set-DnsClientServerAddress -InterfaceAlias "Ethernet" `
         <section class="chapter ad-module-source" id="active-directory-module">
           <div class="chapter-number">AD</div>
           <div class="chapter-title"><span>Módulo especial</span><h2>Implementar Active Directory Domain Services</h2></div>
-          <p class="lead">En este laboratorio convertirá <strong>DC01</strong> en controlador del dominio <strong>ad.empresa.example</strong>, configurará DNS, organizará usuarios y grupos, aplicará una directiva básica y unirá dos equipos Windows 11 Pro.</p>
+          <p class="lead">En este laboratorio convertirá <strong>DC01</strong> en controlador del dominio <strong>ad.empresa.example</strong>. Después construirá el departamento Ventas, asignará acceso mediante grupos, aplicará una directiva, configurará DNS y DHCP y comprobará el inicio de sesión desde dos equipos Windows 11 Pro.</p>
 
           <div class="callout info"><span>i</span><div><strong>Qué resuelve Active Directory</strong><p>AD DS centraliza identidades, equipos, autenticación y autorización. DNS permite localizar controladores y servicios; Kerberos autentica; LDAP consulta el directorio; las directivas de grupo estandarizan la configuración.</p></div></div>
 
           <div class="ad-architecture" role="img" aria-label="Dos clientes conectados por red al controlador de dominio DC01 con Active Directory, DNS, Kerberos y LDAP">
-            <div class="ad-client"><b>PC-VENTAS01</b><span>192.168.10.21</span></div><i>Red / DNS</i>
+            <div class="ad-client"><b>PC-VENTAS01</b><span>Dirección por DHCP</span></div><i>Red / DNS</i>
             <div class="ad-dc"><small>Controlador de dominio</small><strong>DC01</strong><span>AD DS · DNS · Kerberos · LDAP</span><b>192.168.10.10</b></div><i>Red / DNS</i>
-            <div class="ad-client"><b>PC-TI01</b><span>192.168.10.22</span></div>
+            <div class="ad-client"><b>PC-TI01</b><span>Dirección por DHCP</span></div>
           </div>
 
           <nav class="module-jump" aria-label="Contenido del módulo Active Directory">
-            <a href="#ad-plan">1. Plan</a><a href="#ad-server">2. Servidor</a><a href="#ad-role">3. AD DS</a><a href="#ad-objects">4. Objetos</a><a href="#ad-clients">5. Clientes</a><a href="#ad-verify">6. Validación</a>
+            <a href="#ad-concepts">1. Conceptos</a><a href="#ad-plan">2. Plan</a><a href="#ad-role">3. Instalación</a><a href="#ad-objects">4. Organización</a><a href="#ad-dns">5. DNS</a><a href="#ad-dhcp">6. DHCP</a><a href="#ad-clients">7. Clientes</a><a href="#ad-verify">8. Validación</a>
           </nav>
 
-          <h3 class="subheading" id="ad-plan">1. Diseño y requisitos del laboratorio</h3>
+          <h3 class="subheading" id="ad-concepts">1. Comprender Active Directory antes de configurarlo</h3>
+          <p><strong>Active Directory Domain Services (AD DS)</strong> es el directorio central de una red Windows. Guarda objetos —usuarios, equipos y grupos— y permite que una persona use una sola identidad para entrar en los equipos y acceder únicamente a los recursos autorizados. Un <strong>controlador de dominio</strong> es el servidor que conserva esa información y responde a las solicitudes de autenticación.</p>
+          <div class="callout tip"><span>?</span><div><strong>Una comparación sencilla</strong><p>Imagine una empresa como un edificio: el bosque es toda la organización; los dominios son sedes administrativas; las OU son departamentos; los usuarios son empleados; los grupos representan cargos; los permisos abren puertas; y las GPO establecen reglas comunes.</p></div></div>
+
+          <div class="directory-map" role="img" aria-label="Jerarquía lógica de ejemplo: bosque, árbol, dominio, unidades organizativas, grupos y usuarios">
+            <div class="map-level forest"><span>Bosque</span><strong>ad.empresa.example</strong></div>
+            <div class="map-connector">contiene</div>
+            <div class="map-level tree"><span>Árbol</span><strong>ad.empresa.example</strong><small>nombres DNS continuos</small></div>
+            <div class="map-connector">incluye</div>
+            <div class="map-level domain"><span>Dominio</span><strong>ad.empresa.example</strong><small>límite administrativo y de autenticación</small></div>
+            <div class="map-connector">organiza</div>
+            <div class="map-branches"><div><span>OU</span><b>Ventas</b></div><div><span>Grupos</span><b>Directivos · Comerciales</b></div><div><span>Usuarios</span><b>Ana · Carlos · Laura</b></div></div>
+          </div>
+
+          <div class="ad-concept-grid">
+            <article><span>01</span><h4>Bosque</h4><p><b>Definición:</b> nivel lógico más alto de AD DS; reúne uno o más dominios que comparten esquema, configuración y catálogo global.</p><p><b>Función:</b> establece el gran límite de confianza y administración.</p><p><b>Ejemplo:</b> el primer dominio <code>ad.empresa.example</code> crea también el bosque del laboratorio.</p></article>
+            <article><span>02</span><h4>Árbol</h4><p><b>Definición:</b> uno o más dominios de un bosque cuyos nombres DNS forman una jerarquía continua.</p><p><b>Función:</b> permite crecer conservando relación de nombres.</p><p><b>Ejemplo:</b> <code>ad.empresa.example</code> y <code>sede.ad.empresa.example</code> pertenecerían al mismo árbol.</p></article>
+            <article><span>03</span><h4>Dominio</h4><p><b>Definición:</b> partición del directorio que contiene identidades y equipos y se replica entre sus controladores.</p><p><b>Función:</b> autentica cuentas y aplica reglas comunes.</p><p><b>Ejemplo:</b> el usuario <code>EMPRESA\atorres</code> pertenece a <code>ad.empresa.example</code>.</p></article>
+            <article><span>04</span><h4>Unidad organizativa (OU)</h4><p><b>Definición:</b> contenedor creado dentro de un dominio para ordenar objetos.</p><p><b>Función:</b> facilita delegar administración y vincular GPO.</p><p><b>Ejemplo:</b> <code>OU=Usuarios,OU=Ventas</code> reúne las cuentas del departamento.</p></article>
+            <article><span>05</span><h4>Grupo</h4><p><b>Definición:</b> conjunto de cuentas administradas como una sola identidad de seguridad.</p><p><b>Función:</b> asigna acceso por función laboral, sin configurar usuario por usuario.</p><p><b>Ejemplo:</b> <code>Grupo_Ventas_Comerciales</code> recibe acceso a la carpeta General.</p></article>
+            <article><span>06</span><h4>Usuario</h4><p><b>Definición:</b> objeto que representa a una persona o, en casos controlados, a un servicio.</p><p><b>Función:</b> identifica y autentica mediante nombre y credencial.</p><p><b>Ejemplo:</b> Ana Torres inicia como <code>atorres@ad.empresa.example</code>.</p></article>
+            <article><span>07</span><h4>Permiso</h4><p><b>Definición:</b> regla que autoriza o deniega una acción sobre un recurso.</p><p><b>Función:</b> controla lectura, modificación o administración de carpetas, impresoras y aplicaciones.</p><p><b>Ejemplo:</b> Directivos modifica General y Dirección; Comerciales solo General.</p></article>
+            <article><span>08</span><h4>Política de grupo (GPO)</h4><p><b>Definición:</b> colección central de opciones para usuarios o equipos.</p><p><b>Función:</b> impone configuraciones coherentes según el sitio, dominio u OU donde se vincule.</p><p><b>Ejemplo:</b> bloquear la pantalla de Ventas tras 900 segundos.</p></article>
+          </div>
+          <div class="callout warning"><span>!</span><div><strong>OU no significa grupo</strong><p>Una OU organiza y delimita administración o directivas; un grupo concede acceso. Mover a Ana a la OU Ventas no le da permiso sobre una carpeta: debe pertenecer al grupo autorizado.</p></div></div>
+
+          <h3 class="subheading" id="ad-plan">2. Diseño y requisitos del laboratorio</h3>
           <p>Defina los nombres y direcciones antes de instalar el rol. Después de crear el bosque, cambiar el nombre DNS del dominio implica una migración compleja.</p>
           <div class="ad-plan-grid">
             <article><span>Servidor</span><h4>DC01</h4><ul><li>Windows Server 2022 actualizado</li><li>2 vCPU, 4 GB RAM y 60 GB de disco como mínimo de laboratorio</li><li>IP 192.168.10.10/24</li><li>Gateway 192.168.10.1</li><li>DNS preferido 192.168.10.10</li></ul></article>
             <article><span>Dominio</span><h4>ad.empresa.example</h4><ul><li>NetBIOS: EMPRESA</li><li>Nivel de bosque: Windows Server 2016</li><li>Nivel de dominio: Windows Server 2016</li><li>DNS integrado en Active Directory</li><li>Contraseña DSRM diferente y protegida</li></ul></article>
-            <article><span>Clientes</span><h4>Dos Windows 11 Pro</h4><ul><li>PC-VENTAS01 · 192.168.10.21</li><li>PC-TI01 · 192.168.10.22</li><li>2 vCPU, 4 GB RAM y 64 GB de disco</li><li>Mismo conmutador virtual que DC01</li><li>DNS: únicamente 192.168.10.10</li></ul></article>
+            <article><span>Clientes</span><h4>Dos Windows 11 Pro</h4><ul><li>PC-VENTAS01 y PC-TI01</li><li>Dirección automática del ámbito .100–.189</li><li>2 vCPU, 4 GB RAM y 64 GB de disco</li><li>Mismo conmutador virtual que DC01</li><li>DNS recibido por DHCP: 192.168.10.10</li></ul></article>
           </div>
           <div class="callout warning"><span>!</span><div><strong>Edición del cliente</strong><p>Windows Home no puede unirse a un dominio de Active Directory local. Use Windows 10/11 Pro, Enterprise, Pro Education o Pro for Workstations.</p></div></div>
           <div class="lesson-note"><strong>Producción</strong><p>Use un subdominio de un nombre DNS que controle la organización. <code>.local</code> puede entrar en conflicto con mDNS; <code>.example</code> se utiliza aquí solo como nombre reservado para documentación.</p></div>
 
-          <h3 class="subheading" id="ad-server">2. Preparar Windows Server 2022</h3>
+          <h3 class="subheading" id="ad-server">3. Preparar Windows Server 2022</h3>
           <ol class="procedure-list">
             <li><span>1</span><p>Conecte DC01 y los clientes al mismo vSwitch interno o privado. Si necesita descargar actualizaciones, use temporalmente una interfaz externa controlada.</p></li>
             <li><span>2</span><p>Instale todas las actualizaciones, seleccione la zona horaria correcta y confirme que el reloj sea preciso.</p></li>
@@ -418,7 +444,7 @@ Set-DnsClientServerAddress -InterfaceAlias "Ethernet" `
   -ServerAddresses 192.168.10.10</code></pre></div>
           <div class="ad-evidence"><strong>Captura 1 · Preparación</strong><p>Debe mostrar el Administrador del servidor con nombre DC01 y las propiedades IPv4. No exponga contraseñas ni direcciones públicas.</p></div>
 
-          <h3 class="subheading" id="ad-role">3. Instalar AD DS y crear el bosque</h3>
+          <h3 class="subheading" id="ad-role">4. Instalar AD DS y crear el bosque</h3>
           <p>La instalación gráfica tiene <strong>dos etapas diferentes</strong>. En la primera se agregan los archivos y herramientas del rol. En la segunda se configura el bosque y el servidor se convierte realmente en controlador de dominio.</p>
 
           <h4>Etapa A · Asistente para agregar roles y características</h4>
@@ -462,7 +488,7 @@ Install-ADDSForest `
           <div class="callout info"><span>i</span><div><strong>Nivel funcional correcto</strong><p>Windows Server 2019 y 2022 utilizan Windows Server 2016 como nivel funcional más reciente. No existe un nivel funcional “Windows Server 2022”.</p></div></div>
           <div class="ad-evidence"><strong>Capturas 2D–2H · Promoción</strong><p>Incluya Configuración de implementación, Opciones del controlador, Opciones de DNS, Opciones adicionales, Rutas de acceso, Revisar opciones y Comprobación de requisitos previos. Oculte la contraseña DSRM.</p></div>
 
-          <h3 class="subheading">4. Configuración posterior: DNS y salud</h3>
+          <h3 class="subheading">5. Comprobar la promoción y la salud del dominio</h3>
           <ol class="procedure-list">
             <li><span>1</span><p>Inicie sesión como <code>EMPRESA\Administrator</code> o <code>Administrator@ad.empresa.example</code>.</p></li>
             <li><span>2</span><p>En el <strong>Administrador del servidor</strong> confirme que aparecen AD DS y DNS. Abra <strong>Herramientas → DNS</strong> y compruebe las zonas <code>ad.empresa.example</code> y <code>_msdcs.ad.empresa.example</code>.</p></li>
@@ -476,52 +502,155 @@ dcdiag /v
 dcdiag /test:DNS
 nslookup -type=SRV _ldap._tcp.dc._msdcs.ad.empresa.example</code></pre></div>
 
-          <h3 class="subheading" id="ad-objects">5. Crear OUs, grupos y usuarios</h3>
-          <p>Las unidades organizativas permiten ordenar objetos y aplicar directivas. Los grupos representan permisos; los usuarios representan personas. Evite asignar permisos recurso por recurso a cada usuario.</p>
-          <ol class="procedure-list">
-            <li><span>1</span><p>Abra <strong>Herramientas → Usuarios y equipos de Active Directory</strong>.</p></li>
-            <li><span>2</span><p>En la raíz del dominio cree la OU <strong>Empresa</strong>. Dentro cree <strong>Usuarios</strong>, <strong>Equipos</strong> y <strong>Grupos</strong>.</p></li>
-            <li><span>3</span><p>En Usuarios cree <strong>Ana Torres</strong> (<code>atorres</code>) y <strong>Luis Gómez</strong> (<code>lgomez</code>). Use contraseñas temporales únicas y active el cambio en el siguiente inicio.</p></li>
-            <li><span>4</span><p>En Grupos cree <strong>GG-Ventas</strong> como grupo Global de Seguridad y agregue a Ana Torres.</p></li>
-            <li><span>5</span><p>Abra <strong>Herramientas → Administración de directivas de grupo</strong>. Cree <strong>GPO-Base-Usuarios</strong>, vincúlela a la OU Usuarios y configure una directiva sencilla, por ejemplo protector de pantalla protegido por contraseña con espera de 900 segundos.</p></li>
-          </ol>
-          <div class="code-card large"><div class="code-head"><span>PowerShell · estructura de ejemplo</span><button class="copy-button" type="button">Copiar</button></div><pre><code>$base = "DC=ad,DC=empresa,DC=example"
+          <h3 class="subheading" id="ad-objects">6. Construir el departamento Ventas</h3>
+          <p>Ahora se aplican los conceptos anteriores en este orden: <strong>crear contenedores → crear grupos de función → crear usuarios → hacerlos miembros de los grupos → asignar permisos → vincular una GPO</strong>. Este orden evita permisos individuales difíciles de auditar.</p>
+
+          <h4>Ejemplo 1 · Crear la OU Ventas y sus contenedores</h4>
+          <div class="teaching-sequence">
+            <article><span>1</span><div><h5>Abrir la consola correcta</h5><p><b>Qué hacer:</b> en <strong>Administrador del servidor</strong> seleccione <strong>Herramientas → Usuarios y equipos de Active Directory</strong>. Expanda <code>ad.empresa.example</code>.</p><p class="why"><b>¿Por qué?</b> Esta consola administra los objetos del dominio; no confunda el contenedor <em>Usuarios</em> predeterminado con una OU creada por usted.</p><small><b>Qué ocurrió:</b> está viendo la jerarquía real del dominio que se replica entre controladores.</small></div></article>
+            <article><span>2</span><div><h5>Crear la OU principal Empresa</h5><p><b>Qué hacer:</b> clic derecho en <code>ad.empresa.example</code> → <strong>Nuevo → Unidad organizativa</strong>. Escriba <code>Empresa</code>, conserve marcada <strong>Proteger contenedor contra eliminación accidental</strong> y pulse <strong>Aceptar</strong>.</p><p class="why"><b>¿Por qué?</b> La OU raíz separa sus objetos de los contenedores predeterminados y deja una base limpia para delegar o aplicar políticas.</p><small><b>Qué ocurrió:</b> AD DS creó <code>OU=Empresa,DC=ad,DC=empresa,DC=example</code>; todavía no hay usuarios ni permisos dentro.</small></div></article>
+            <article><span>3</span><div><h5>Crear la OU del departamento</h5><p><b>Qué hacer:</b> clic derecho en <strong>Empresa</strong> → <strong>Nuevo → Unidad organizativa</strong>. Nombre: <code>Ventas</code>; mantenga la protección y acepte.</p><p class="why"><b>¿Por qué?</b> Ventas se convierte en el límite lógico donde se administrará ese departamento.</p><small><b>Qué ocurrió:</b> se creó <code>OU=Ventas,OU=Empresa,...</code>, lista para contener otras OU.</small></div></article>
+            <article><span>4</span><div><h5>Separar tipos de objeto</h5><p><b>Qué hacer:</b> dentro de <strong>Ventas</strong> repita el procedimiento y cree tres OU: <code>Usuarios</code>, <code>Grupos</code> y <code>Equipos</code>.</p><p class="why"><b>¿Por qué?</b> Las directivas de usuario y de equipo se administran mejor por separado, y los grupos quedan fáciles de localizar.</p><small><b>Qué ocurrió:</b> la estructura queda Empresa → Ventas → Usuarios / Grupos / Equipos.</small></div></article>
+          </div>
+          <div class="ad-evidence"><strong>Imagen de referencia 3A · Árbol de OU</strong><p>La captura debe mostrar la consola en español, el dominio expandido y la ruta Empresa → Ventas con las tres OU hijas. No debe mostrar contraseñas.</p></div>
+
+          <h4>Ejemplo 2 · Crear los grupos de Ventas</h4>
+          <div class="role-matrix" role="table" aria-label="Grupos y acceso del departamento Ventas">
+            <div class="role-row role-head"><span>Grupo</span><span>Tipo</span><span>Acceso del laboratorio</span></div>
+            <div class="role-row"><code>Grupo_Ventas_Directivos</code><span>Seguridad · Global</span><span>General y Dirección</span></div>
+            <div class="role-row"><code>Grupo_Ventas_Comerciales</code><span>Seguridad · Global</span><span>Solo General</span></div>
+          </div>
+          <div class="teaching-sequence compact">
+            <article><span>1</span><div><h5>Crear Directivos</h5><p><b>Qué hacer:</b> clic derecho en la OU <strong>Grupos</strong> → <strong>Nuevo → Grupo</strong>. Nombre: <code>Grupo_Ventas_Directivos</code>. En <strong>Ámbito del grupo</strong> marque <strong>Global</strong>; en <strong>Tipo de grupo</strong>, <strong>Seguridad</strong>; pulse <strong>Aceptar</strong>.</p><p class="why"><b>¿Por qué?</b> Global reúne cuentas del mismo dominio y Seguridad permite usar el grupo en listas de permisos.</p><small><b>Qué ocurrió:</b> existe una identidad colectiva, pero aún no tiene miembros ni acceso.</small></div></article>
+            <article><span>2</span><div><h5>Crear Comerciales</h5><p><b>Qué hacer:</b> repita el paso con <code>Grupo_Ventas_Comerciales</code>, también <strong>Global</strong> y de <strong>Seguridad</strong>.</p><p class="why"><b>¿Por qué?</b> separar funciones hace posible que ambos grupos compartan General, pero solo Directivos entre en Dirección.</p><small><b>Qué ocurrió:</b> quedaron definidos dos perfiles de acceso independientes.</small></div></article>
+          </div>
+          <div class="lesson-note"><strong>Buena práctica AGDLP</strong><p>En producción se recomienda: <b>A</b>ccounts dentro de grupos <b>G</b>lobales; estos dentro de grupos <b>DL</b>ocales de dominio; y los <b>P</b>ermisos se asignan a los grupos locales. El laboratorio usa los grupos globales directamente para que el primer ejercicio sea más fácil de seguir.</p></div>
+          <div class="ad-evidence"><strong>Imagen de referencia 3B · Nuevo grupo</strong><p>Debe mostrar el cuadro <em>Nuevo objeto: Grupo</em> con el nombre completo, ámbito Global y tipo Seguridad antes de pulsar Aceptar.</p></div>
+
+          <h4>Ejemplo 3 · Crear usuarios y asignarlos a sus grupos</h4>
+          <div class="role-matrix" role="table" aria-label="Usuarios ficticios y pertenencia a grupos">
+            <div class="role-row role-head"><span>Persona</span><span>Inicio de sesión</span><span>Grupo</span></div>
+            <div class="role-row"><span>Ana Torres</span><code>atorres</code><span>Grupo_Ventas_Directivos</span></div>
+            <div class="role-row"><span>Carlos Ruiz</span><code>cruiz</code><span>Grupo_Ventas_Comerciales</span></div>
+            <div class="role-row"><span>Laura Pérez</span><code>lperez</code><span>Grupo_Ventas_Comerciales</span></div>
+          </div>
+          <div class="teaching-sequence">
+            <article><span>1</span><div><h5>Iniciar la creación de Ana Torres</h5><p><b>Qué hacer:</b> clic derecho en la OU <strong>Usuarios</strong> → <strong>Nuevo → Usuario</strong>. Escriba Nombre <code>Ana</code>, Apellidos <code>Torres</code>, Nombre completo <code>Ana Torres</code> y Nombre de inicio de sesión <code>atorres</code>. Verifique el sufijo <code>@ad.empresa.example</code> y pulse <strong>Siguiente</strong>.</p><p class="why"><b>¿Por qué?</b> el nombre de inicio debe ser único; el UPN completo permite entrar como un correo corporativo.</p><small><b>Qué ocurrió:</b> el asistente reservó la identidad que tendrá Ana dentro del dominio.</small></div></article>
+            <article><span>2</span><div><h5>Definir contraseña y estado</h5><p><b>Qué hacer:</b> escriba una contraseña temporal que cumpla la política. Marque <strong>El usuario debe cambiar la contraseña en el siguiente inicio de sesión</strong>; deje sin marcar <strong>El usuario no puede cambiar la contraseña</strong>, <strong>La contraseña nunca expira</strong> y <strong>La cuenta está deshabilitada</strong>. Pulse <strong>Siguiente → Finalizar</strong>.</p><p class="why"><b>¿Por qué?</b> solo la persona debe conocer su contraseña definitiva; “nunca expira” no debe usarse como atajo.</p><small><b>Qué ocurrió:</b> se creó una cuenta habilitada; la contraseña temporal servirá una sola vez.</small></div></article>
+            <article><span>3</span><div><h5>Agregar Ana a Directivos</h5><p><b>Qué hacer:</b> doble clic en <strong>Ana Torres</strong> → pestaña <strong>Miembro de</strong> → <strong>Agregar</strong>. Escriba <code>Grupo_Ventas_Directivos</code> → <strong>Comprobar nombres → Aceptar</strong>. Acepte nuevamente.</p><p class="why"><b>¿Por qué?</b> la pertenencia, y no la OU, es la que concederá acceso a los recursos de Directivos.</p><small><b>Qué ocurrió:</b> cuando Ana obtenga un nuevo inicio de sesión, su token de seguridad incluirá el grupo.</small></div></article>
+            <article><span>4</span><div><h5>Crear Carlos y Laura</h5><p><b>Qué hacer:</b> repita los pasos con Carlos Ruiz (<code>cruiz</code>) y Laura Pérez (<code>lperez</code>). En <strong>Miembro de</strong> agregue ambos a <code>Grupo_Ventas_Comerciales</code>.</p><p class="why"><b>¿Por qué?</b> varios usuarios con la misma función heredan la misma autorización sin duplicar reglas.</p><small><b>Qué ocurrió:</b> el directorio contiene tres personas y dos perfiles de acceso.</small></div></article>
+          </div>
+          <div class="ad-evidence"><strong>Imagen de referencia 3C · Usuario y pertenencia</strong><p>Muestre una captura del primer formulario de Ana con el UPN y otra de <em>Propiedades → Miembro de</em> donde aparezca Grupo_Ventas_Directivos. Nunca capture la pantalla de contraseña.</p></div>
+
+          <h4>Asignar permisos diferentes a carpetas compartidas</h4>
+          <div class="teaching-sequence compact">
+            <article><span>1</span><div><h5>Crear la estructura</h5><p><b>Qué hacer:</b> en un servidor de archivos del laboratorio cree <code>C:\Recursos\Ventas\General</code> y <code>C:\Recursos\Ventas\Direccion</code>. Para una práctica pequeña puede usar DC01, pero en producción el controlador no debe actuar como servidor de archivos general.</p><small><b>Qué ocurrió:</b> existen dos recursos con sensibilidad distinta.</small></div></article>
+            <article><span>2</span><div><h5>Compartir Ventas</h5><p><b>Qué hacer:</b> clic derecho en <code>C:\Recursos\Ventas</code> → <strong>Propiedades → Compartir → Uso compartido avanzado</strong>. Marque <strong>Compartir esta carpeta</strong>, nombre <code>Ventas</code> y, en <strong>Permisos</strong>, otorgue <strong>Cambiar</strong> y <strong>Leer</strong> a ambos grupos.</p><small><b>Qué ocurrió:</b> la ruta de red será <code>\\DC01\Ventas</code>; el permiso compartido establece el límite exterior.</small></div></article>
+            <article><span>3</span><div><h5>Proteger General con NTFS</h5><p><b>Qué hacer:</b> abra <strong>Propiedades → Seguridad → Editar → Agregar</strong> en General. Agregue los dos grupos y conceda <strong>Modificar, Leer y ejecutar, Mostrar y Lectura/Escritura</strong>. No conceda Control total.</p><small><b>Qué ocurrió:</b> Directivos y Comerciales pueden trabajar en General.</small></div></article>
+            <article><span>4</span><div><h5>Proteger Dirección con NTFS</h5><p><b>Qué hacer:</b> en Dirección seleccione <strong>Propiedades → Seguridad → Opciones avanzadas → Deshabilitar herencia → Convertir los permisos heredados</strong>. Retire las entradas amplias, como Usuarios o Usuarios autenticados, pero conserve Administradores y SYSTEM. Agregue <code>Grupo_Ventas_Directivos</code> con <strong>Modificar</strong>.</p><p class="why"><b>¿Por qué?</b> al combinar permisos compartidos y NTFS prevalece el resultado más restrictivo.</p><small><b>Qué ocurrió:</b> Ana entra en ambas carpetas; Carlos y Laura reciben acceso denegado en Dirección.</small></div></article>
+          </div>
+
+          <h4>Aplicar una GPO a los usuarios de Ventas</h4>
+          <div class="teaching-sequence compact">
+            <article><span>1</span><div><h5>Crear y vincular</h5><p><b>Qué hacer:</b> abra <strong>Herramientas → Administración de directivas de grupo</strong>. Expanda Bosque → Dominios → <code>ad.empresa.example</code> → Empresa → Ventas. Clic derecho en la OU <strong>Usuarios</strong> → <strong>Crear un GPO en este dominio y vincularlo aquí</strong>. Nombre: <code>GPO-Ventas-Usuarios</code>.</p><small><b>Qué ocurrió:</b> se creó una directiva cuyo alcance son los usuarios ubicados en esa OU.</small></div></article>
+            <article><span>2</span><div><h5>Configurar el bloqueo</h5><p><b>Qué hacer:</b> clic derecho en la GPO → <strong>Editar</strong>. Vaya a <strong>Configuración de usuario → Directivas → Plantillas administrativas → Panel de control → Personalización</strong>. Habilite <strong>Habilitar el protector de pantalla</strong>, <strong>Proteger el protector de pantalla mediante contraseña</strong> y establezca <strong>Tiempo de espera del protector de pantalla</strong> en <code>900</code> segundos.</p><p class="why"><b>¿Por qué?</b> la regla se administra una sola vez y se aplica de forma coherente a todas las cuentas de la OU.</p><small><b>Qué ocurrió:</b> la configuración quedó almacenada en AD DS y SYSVOL; el cliente la recibirá al actualizar políticas.</small></div></article>
+          </div>
+
+          <div class="code-card large"><div class="code-head"><span>PowerShell · crear OU, grupos y usuarios</span><button class="copy-button" type="button">Copiar</button></div><pre><code>$base = "DC=ad,DC=empresa,DC=example"
+$empresa = "OU=Empresa,$base"
+$ventas = "OU=Ventas,$empresa"
 New-ADOrganizationalUnit -Name "Empresa" -Path $base
-New-ADOrganizationalUnit -Name "Usuarios" -Path "OU=Empresa,$base"
-New-ADOrganizationalUnit -Name "Equipos" -Path "OU=Empresa,$base"
-New-ADOrganizationalUnit -Name "Grupos" -Path "OU=Empresa,$base"
+New-ADOrganizationalUnit -Name "Ventas" -Path $empresa
+"Usuarios","Grupos","Equipos" | ForEach-Object {
+  New-ADOrganizationalUnit -Name $_ -Path $ventas
+}
 
-$tempPassword = Read-Host "Contraseña temporal" -AsSecureString
-New-ADUser -Name "Ana Torres" -SamAccountName "atorres" `
-  -UserPrincipalName "atorres@ad.empresa.example" `
-  -Path "OU=Usuarios,OU=Empresa,$base" `
-  -AccountPassword $tempPassword -Enabled $true `
-  -ChangePasswordAtLogon $true
+$grupos = "OU=Grupos,$ventas"
+New-ADGroup -Name "Grupo_Ventas_Directivos" -GroupScope Global -GroupCategory Security -Path $grupos
+New-ADGroup -Name "Grupo_Ventas_Comerciales" -GroupScope Global -GroupCategory Security -Path $grupos
 
-New-ADGroup -Name "GG-Ventas" -GroupScope Global `
-  -GroupCategory Security -Path "OU=Grupos,OU=Empresa,$base"
-Add-ADGroupMember -Identity "GG-Ventas" -Members "atorres"</code></pre></div>
-          <div class="ad-evidence"><strong>Captura 3 · Directorio</strong><p>Muestre el árbol Empresa con sus tres OUs, las dos cuentas y las propiedades del grupo GG‑Ventas.</p></div>
+$usuarios = "OU=Usuarios,$ventas"
+$personas = @(
+  @{Nombre="Ana Torres"; NombrePila="Ana"; Apellido="Torres"; Cuenta="atorres"},
+  @{Nombre="Carlos Ruiz"; NombrePila="Carlos"; Apellido="Ruiz"; Cuenta="cruiz"},
+  @{Nombre="Laura Pérez"; NombrePila="Laura"; Apellido="Pérez"; Cuenta="lperez"}
+)
+foreach ($persona in $personas) {
+  $clave = Read-Host "Contraseña temporal única para $($persona.Cuenta)" -AsSecureString
+  New-ADUser -Name $persona.Nombre -GivenName $persona.NombrePila -Surname $persona.Apellido `
+    -SamAccountName $persona.Cuenta -UserPrincipalName "$($persona.Cuenta)@ad.empresa.example" `
+    -Path $usuarios -AccountPassword $clave -Enabled $true -ChangePasswordAtLogon $true
+}
+Add-ADGroupMember Grupo_Ventas_Directivos atorres
+Add-ADGroupMember Grupo_Ventas_Comerciales cruiz,lperez</code></pre></div>
+          <div class="ad-evidence"><strong>Imagen de referencia 3D · Resultado del directorio</strong><p>La captura final debe mostrar las tres cuentas en Usuarios y los dos grupos en Grupos. En otra imagen muestre GPO‑Ventas‑Usuarios vinculada a la OU Usuarios.</p></div>
 
-          <h3 class="subheading" id="ad-clients">6. Instalar y unir dos equipos Windows 11 Pro</h3>
+          <h3 class="subheading" id="ad-dns">7. DNS: cómo Active Directory encuentra sus servicios</h3>
+          <p><strong>DNS (Sistema de nombres de dominio)</strong> traduce nombres comprensibles, como <code>DC01.ad.empresa.example</code>, en direcciones IP. En Active Directory también publica registros <strong>SRV</strong> que indican dónde están el controlador, Kerberos y LDAP. Por eso todos los miembros del dominio deben consultar primero al DNS interno y no al router ni a un DNS público.</p>
+          <div class="ad-concept-grid dns-concepts">
+            <article><span>DNS</span><h4>Zona DNS</h4><p>Parte del espacio de nombres administrada por un servidor. La zona <code>ad.empresa.example</code> se crea integrada en AD al promover DC01 y puede replicarse con el directorio.</p></article>
+            <article><span>A</span><h4>Registro de host (A)</h4><p>Relaciona un nombre IPv4 con una dirección. Ejemplo: <code>intranet.ad.empresa.example → 192.168.10.30</code>.</p></article>
+            <article><span>MX</span><h4>Intercambiador de correo</h4><p>Indica qué servidor recibe correo para un dominio. Ejemplo: prioridad 10 hacia <code>correo.ad.empresa.example</code>. El registro no instala un servidor de correo.</p></article>
+            <article><span>→</span><h4>Resolución de nombres</h4><p>Proceso por el cual un cliente pregunta al DNS y recibe el registro solicitado. Si el servidor interno no conoce un nombre de Internet, puede consultarlo mediante reenviadores.</p></article>
+          </div>
+
+          <h4>Práctica DNS · Crear una zona inversa y registros A, PTR y MX</h4>
+          <div class="teaching-sequence">
+            <article><span>1</span><div><h5>Verificar la zona de Active Directory</h5><p><b>Qué hacer:</b> abra <strong>Administrador del servidor → Herramientas → DNS</strong>. Expanda <strong>DC01 → Zonas de búsqueda directa</strong> y abra <code>ad.empresa.example</code>. Confirme los registros de DC01 y las carpetas que comienzan por guion bajo.</p><p class="why"><b>¿Por qué?</b> esos registros SRV permiten que un cliente encuentre el controlador sin conocer su IP de antemano.</p><small><b>Qué ocurrió:</b> no se creó nada nuevo; se comprobó que la promoción publicó correctamente los servicios del dominio.</small></div></article>
+            <article><span>2</span><div><h5>Crear la zona de búsqueda inversa</h5><p><b>Qué hacer:</b> clic derecho en <strong>Zonas de búsqueda inversa → Zona nueva</strong>. Elija <strong>Zona principal</strong>, marque <strong>Almacenar la zona en Active Directory</strong>, replique a todos los servidores DNS del dominio, seleccione <strong>Zona de búsqueda inversa para IPv4</strong> y escriba el identificador de red <code>192.168.10</code>. Permita solo actualizaciones dinámicas seguras y finalice.</p><p class="why"><b>¿Por qué?</b> una zona inversa traduce IP a nombre mediante registros PTR, útil para diagnóstico y algunos servicios.</p><small><b>Qué ocurrió:</b> se creó la zona <code>10.168.192.in-addr.arpa</code>.</small></div></article>
+            <article><span>3</span><div><h5>Crear el host intranet</h5><p><b>Qué hacer:</b> clic derecho en la zona <code>ad.empresa.example</code> → <strong>Host nuevo (A o AAAA)</strong>. Nombre: <code>intranet</code>; dirección IP: <code>192.168.10.30</code>. Marque <strong>Crear registro del puntero (PTR) asociado</strong> y pulse <strong>Agregar host</strong>.</p><p class="why"><b>¿Por qué?</b> las personas podrán usar el nombre en vez de memorizar la IP.</p><small><b>Qué ocurrió:</b> el DNS puede resolver intranet → IP y, mediante PTR, IP → intranet.</small></div></article>
+            <article><span>4</span><div><h5>Preparar y crear el registro MX</h5><p><b>Qué hacer:</b> cree primero un registro A llamado <code>correo</code> con IP <code>192.168.10.40</code>. Luego clic derecho en la zona → <strong>Intercambiador de correo (MX)</strong>. Deje vacío <strong>Host o dominio secundario</strong>, seleccione <code>correo.ad.empresa.example</code> como servidor y establezca prioridad <code>10</code>.</p><p class="why"><b>¿Por qué?</b> un MX debe señalar un nombre que, a su vez, tenga un registro A o AAAA; no debe apuntar directamente a una IP.</p><small><b>Qué ocurrió:</b> DNS anuncia el destino de correo, pero aún sería necesario instalar y proteger una plataforma de correo real.</small></div></article>
+            <article><span>5</span><div><h5>Probar desde un cliente</h5><p><b>Qué hacer:</b> ejecute <code>nslookup intranet.ad.empresa.example</code>, <code>nslookup 192.168.10.30</code> y <code>nslookup -type=MX ad.empresa.example</code>.</p><p class="why"><b>¿Por qué?</b> una consulta directa, otra inversa y otra por tipo demuestran que cada registro cumple su función.</p><small><b>Resultado esperado:</b> aparecen 192.168.10.30, intranet.ad.empresa.example y correo.ad.empresa.example con prioridad 10.</small></div></article>
+          </div>
+          <div class="ad-evidence"><strong>Imagen de referencia 6 · DNS</strong><p>Incluya la zona directa con los registros intranet y correo, la zona inversa con el PTR y la salida de las tres consultas. Evite capturar zonas de producción.</p></div>
+
+          <h3 class="subheading" id="ad-dhcp">8. DHCP: entregar la configuración de red automáticamente</h3>
+          <p><strong>DHCP (Protocolo de configuración dinámica de host)</strong> entrega a cada cliente una IP y los datos necesarios para comunicarse. El cliente recibe una <strong>concesión</strong> temporal; al renovarla puede conservar su dirección sin que el administrador configure cada equipo manualmente.</p>
+          <div class="ad-concept-grid dns-concepts">
+            <article><span>↔</span><h4>Rango de direcciones</h4><p>Conjunto que DHCP puede entregar. En el laboratorio: <code>192.168.10.100–192.168.10.200</code>.</p></article>
+            <article><span>⏱</span><h4>Concesión</h4><p>Tiempo durante el cual una IP queda asignada a un cliente. Se usarán 8 días para una red estable; en redes de visitantes conviene un período menor.</p></article>
+            <article><span>003</span><h4>Puerta de enlace</h4><p>Opción que indica por dónde salen los clientes a otras redes: <code>192.168.10.1</code>.</p></article>
+            <article><span>006</span><h4>Servidores DNS</h4><p>Opción crítica para el dominio: <code>192.168.10.10</code>. La opción 015 anunciará <code>ad.empresa.example</code> como sufijo DNS.</p></article>
+          </div>
+          <div class="callout warning"><span>!</span><div><strong>Alcance del laboratorio</strong><p>Para ahorrar recursos se instalará DHCP en DC01. En una infraestructura empresarial es preferible separar roles según disponibilidad y seguridad. Si los clientes están en otra VLAN, configure un agente de retransmisión DHCP o <em>IP helper</em> en el enrutador.</p></div></div>
+
+          <h4>Práctica DHCP · Instalar, autorizar y crear un ámbito IPv4</h4>
+          <div class="teaching-sequence">
+            <article><span>1</span><div><h5>Instalar el rol</h5><p><b>Qué hacer:</b> abra <strong>Administrar → Agregar roles y características</strong>. Elija instalación basada en roles, seleccione DC01, marque <strong>Servidor DHCP</strong>, pulse <strong>Agregar características</strong>, continúe por Características y Servidor DHCP, confirme e instale.</p><p class="why"><b>¿Por qué?</b> el rol incorpora el servicio que escucha solicitudes de clientes y la consola de administración.</p><small><b>Qué ocurrió:</b> los binarios están instalados, pero el servidor todavía debe completar la configuración y autorizarse.</small></div></article>
+            <article><span>2</span><div><h5>Completar la configuración y autorizar</h5><p><b>Qué hacer:</b> en la bandera de notificaciones seleccione <strong>Completar configuración de DHCP</strong>. Pulse <strong>Siguiente</strong>, use credenciales de administrador del dominio, confirme <strong>Usar las credenciales del usuario siguiente</strong> y pulse <strong>Confirmar → Cerrar</strong>. Abra <strong>Herramientas → DHCP</strong>; actualice hasta ver el servidor con indicador verde.</p><p class="why"><b>¿Por qué?</b> Active Directory bloquea servidores DHCP del dominio que no estén autorizados, evitando que uno ajeno entregue una puerta de enlace o DNS incorrectos.</p><small><b>Qué ocurrió:</b> DC01 quedó registrado como servidor DHCP confiable en AD DS.</small></div></article>
+            <article><span>3</span><div><h5>Iniciar el asistente de ámbito</h5><p><b>Qué hacer:</b> en la consola DHCP expanda DC01, clic derecho en <strong>IPv4 → Ámbito nuevo</strong>. Pulse <strong>Siguiente</strong>. Nombre: <code>Clientes-Red-10</code>; descripción: <code>Equipos del laboratorio AD</code>.</p><p class="why"><b>¿Por qué?</b> un ámbito representa una subred y define qué direcciones puede administrar el servidor.</p><small><b>Qué ocurrió:</b> se inició la definición lógica de la red 192.168.10.0/24.</small></div></article>
+            <article><span>4</span><div><h5>Definir rango y exclusiones</h5><p><b>Qué hacer:</b> Dirección inicial <code>192.168.10.100</code>, final <code>192.168.10.200</code>, longitud <code>24</code> y máscara <code>255.255.255.0</code>. En exclusiones puede reservar <code>192.168.10.190–192.168.10.200</code> para futuras asignaciones manuales.</p><p class="why"><b>¿Por qué?</b> DC01, gateway, impresoras y servicios deben quedar fuera del conjunto entregado dinámicamente para evitar duplicados.</p><small><b>Qué ocurrió:</b> DHCP podrá arrendar 192.168.10.100–189 y nunca entregará las exclusiones.</small></div></article>
+            <article><span>5</span><div><h5>Elegir duración de la concesión</h5><p><b>Qué hacer:</b> conserve <code>8 días</code> y pulse <strong>Siguiente</strong>. Seleccione <strong>Configurar estas opciones ahora</strong>.</p><p class="why"><b>¿Por qué?</b> una oficina estable no necesita renovar cada hora; el valor debe reducirse si hay alta rotación de dispositivos.</p><small><b>Qué ocurrió:</b> cada cliente podrá usar su IP durante ese período y renovarla automáticamente.</small></div></article>
+            <article><span>6</span><div><h5>Configurar gateway y DNS</h5><p><b>Qué hacer:</b> en <strong>Enrutador (puerta de enlace predeterminada)</strong> agregue <code>192.168.10.1</code>. En <strong>Nombre de dominio y servidores DNS</strong> escriba dominio principal <code>ad.empresa.example</code> y agregue <code>192.168.10.10</code>. No agregue DNS públicos. Omita WINS porque no se utiliza en este laboratorio.</p><p class="why"><b>¿Por qué?</b> la IP permite conectividad, el gateway permite llegar a otras redes y el DNS interno permite descubrir Active Directory.</p><small><b>Qué ocurrió:</b> quedaron configuradas las opciones 003, 006 y 015 del ámbito.</small></div></article>
+            <article><span>7</span><div><h5>Activar y probar el ámbito</h5><p><b>Qué hacer:</b> seleccione <strong>Sí, deseo activar este ámbito ahora → Finalizar</strong>. En cada cliente cambie IPv4 a <strong>Obtener una dirección IP automáticamente</strong> y DNS a <strong>Obtener la dirección del servidor DNS automáticamente</strong>. Ejecute <code>ipconfig /release</code>, <code>ipconfig /renew</code> e <code>ipconfig /all</code>.</p><p class="why"><b>¿Por qué?</b> un ámbito inactivo no ofrece concesiones; renovar obliga al cliente a solicitar la nueva configuración.</p><small><b>Resultado esperado:</b> IP entre .100 y .189, gateway .1, servidor DHCP .10, DNS .10 y sufijo ad.empresa.example.</small></div></article>
+            <article><span>8</span><div><h5>Integrar las actualizaciones DNS</h5><p><b>Qué hacer:</b> clic derecho en <strong>IPv4 → Propiedades → DNS</strong>. Marque <strong>Habilitar actualizaciones dinámicas de DNS de acuerdo con la configuración siguiente</strong>, <strong>Actualizar siempre dinámicamente los registros A y PTR</strong>, <strong>Descartar los registros A y PTR cuando se elimine la concesión</strong> y la actualización para clientes que no la soliciten.</p><p class="why"><b>¿Por qué?</b> así los nombres permanecen asociados con las IP entregadas y se retiran al finalizar la concesión.</p><small><b>Qué ocurrió:</b> DHCP puede coordinar registros con DNS. En producción configure en <strong>Avanzadas → Credenciales</strong> una cuenta dedicada, sin privilegios administrativos, para actualizaciones seguras.</small></div></article>
+          </div>
+
+          <div class="service-flow" role="img" aria-label="Flujo de integración entre un cliente, DHCP, DNS y Active Directory">
+            <div><span>1</span><b>Cliente</b><small>solicita configuración</small></div><i>→</i><div><span>2</span><b>DHCP</b><small>entrega IP, gateway y DNS</small></div><i>→</i><div><span>3</span><b>DNS</b><small>resuelve el dominio y localiza DC01</small></div><i>→</i><div><span>4</span><b>AD DS</b><small>autentica al usuario y aplica GPO</small></div>
+          </div>
+          <div class="lesson-note"><strong>Cómo trabajan juntos DNS y DHCP</strong><p>DHCP no autentica usuarios: entrega la configuración que permite encontrar al DNS. DNS no entrega direcciones: responde nombres y publica los servicios de AD DS. Con actualizaciones dinámicas seguras, DHCP y los clientes también pueden mantener registros A/PTR sincronizados con las concesiones. En producción use credenciales dedicadas para las actualizaciones que realice DHCP.</p></div>
+          <div class="ad-evidence"><strong>Imagen de referencia 7 · DHCP</strong><p>Muestre el servidor autorizado, el ámbito activo, Intervalo de direcciones, Concesiones de direcciones y Opciones de ámbito 003, 006 y 015. Añada una salida de <code>ipconfig /all</code> ocultando información sensible.</p></div>
+
+          <h3 class="subheading" id="ad-clients">9. Instalar y unir dos equipos Windows 11 Pro</h3>
           <h4>Crear e instalar PC-VENTAS01</h4>
           <ol class="procedure-list">
             <li><span>1</span><p>En Hyper-V cree una VM Generación 2 llamada <strong>PC-VENTAS01</strong>: 4 GB RAM, 2 vCPU, VHDX de 64 GB y el mismo vSwitch de DC01.</p></li>
             <li><span>2</span><p>Monte una ISO oficial de Windows 11, inicie desde DVD e instale <strong>Windows 11 Pro</strong>. Cree una cuenta administrativa local para la preparación.</p></li>
             <li><span>3</span><p>Instale actualizaciones, cambie el nombre a PC-VENTAS01 y reinicie.</p></li>
-            <li><span>4</span><p>Configure IP <code>192.168.10.21/24</code>, gateway <code>192.168.10.1</code> y DNS preferido <code>192.168.10.10</code>.</p></li>
+            <li><span>4</span><p>En las propiedades de IPv4 seleccione <strong>Obtener una dirección IP automáticamente</strong> y <strong>Obtener la dirección del servidor DNS automáticamente</strong>. Ejecute <code>ipconfig /renew</code> y compruebe con <code>ipconfig /all</code> que DHCP entregó IP .100–.189, gateway .1 y DNS .10.</p></li>
             <li><span>5</span><p>Pruebe <code>ping 192.168.10.10</code> y <code>Resolve-DnsName ad.empresa.example</code>. La resolución DNS debe funcionar antes de unir el equipo.</p></li>
           </ol>
           <h4>Crear e instalar PC-TI01</h4>
-          <p>Repita el proceso con IP <code>192.168.10.22</code>. Si clona una plantilla, ejecute primero <code>sysprep /generalize /oobe /shutdown</code>; no copie directamente un Windows ya configurado y encendido.</p>
+          <p>Repita el proceso y permita que DHCP asigne otra dirección disponible. Si clona una plantilla, ejecute primero <code>sysprep /generalize /oobe /shutdown</code>; no copie directamente un Windows ya configurado y encendido.</p>
           <h4>Unir ambos equipos al dominio</h4>
           <ol class="procedure-list">
             <li><span>1</span><p>Inicie con la cuenta administrativa local. Abra <strong>Configuración → Sistema → Información → Configuración avanzada del sistema</strong>. En la pestaña <strong>Nombre de equipo</strong>, pulse <strong>Cambiar</strong>.</p></li>
             <li><span>2</span><p>En <strong>Miembro de</strong> seleccione <strong>Dominio</strong>, escriba <code>ad.empresa.example</code> y pulse <strong>Aceptar</strong>.</p></li>
             <li><span>3</span><p>Cuando se solicite, use una cuenta autorizada, por ejemplo <code>EMPRESA\Administrator</code>. En producción use una cuenta con permisos delegados para unir equipos.</p></li>
             <li><span>4</span><p>Confirme el mensaje de bienvenida al dominio y reinicie.</p></li>
-            <li><span>5</span><p>En el inicio de sesión seleccione <strong>Otro usuario</strong> e ingrese <code>EMPRESA\atorres</code> en PC-VENTAS01. Use <code>EMPRESA\lgomez</code> en PC-TI01.</p></li>
-            <li><span>6</span><p>En <strong>Usuarios y equipos de Active Directory</strong> mueva los objetos desde el contenedor <strong>Computers</strong> a <strong>OU=Equipos,OU=Empresa</strong> para que reciban las GPO vinculadas.</p></li>
+            <li><span>5</span><p>En el inicio de sesión seleccione <strong>Otro usuario</strong> e ingrese <code>EMPRESA\atorres</code> en PC-VENTAS01. En PC-TI01 pruebe <code>EMPRESA\cruiz</code>. En el primer acceso deberán cambiar la contraseña temporal.</p></li>
+            <li><span>6</span><p>En <strong>Usuarios y equipos de Active Directory</strong> mueva los objetos desde el contenedor <strong>Computers</strong> a <strong>OU=Equipos,OU=Ventas,OU=Empresa</strong> para administrarlos y recibir futuras GPO de equipo.</p></li>
           </ol>
           <div class="code-card large"><div class="code-head"><span>PowerShell · alternativa para unir cada cliente</span><button class="copy-button" type="button">Copiar</button></div><pre><code>Resolve-DnsName ad.empresa.example
 Add-Computer -DomainName "ad.empresa.example" `
@@ -529,27 +658,46 @@ Add-Computer -DomainName "ad.empresa.example" `
   -Restart</code></pre></div>
           <div class="ad-evidence"><strong>Capturas 4 y 5 · Clientes</strong><p>Incluya la configuración DNS, el mensaje de bienvenida y el primer inicio con una cuenta de dominio en cada equipo.</p></div>
 
-          <h3 class="subheading" id="ad-verify">7. Validar la implementación</h3>
+          <h4>Probar una conexión remota con credenciales del dominio</h4>
+          <div class="callout info"><span>i</span><div><strong>Requisito de edición</strong><p>Windows 11 Pro puede recibir conexiones de Escritorio remoto; Windows Home solo puede iniciar el cliente, no actuar como destino. Realice esta prueba únicamente en la red del laboratorio y no publique el puerto 3389 en Internet.</p></div></div>
+          <div class="teaching-sequence compact">
+            <article><span>1</span><div><h5>Preparar PC-VENTAS01 como destino</h5><p><b>Qué hacer:</b> en PC-VENTAS01 inicie con un administrador. Abra <strong>Configuración → Sistema → Escritorio remoto</strong>, active <strong>Escritorio remoto</strong> y confirme. Mantenga activa la autenticación a nivel de red.</p><p class="why"><b>¿Por qué?</b> Windows habilita el servicio y sus reglas de Firewall de Windows Defender para el perfil de red correspondiente.</p><small><b>Qué ocurrió:</b> el equipo está listo para recibir una sesión autenticada; todavía falta autorizar al grupo.</small></div></article>
+            <article><span>2</span><div><h5>Autorizar al grupo Directivos</h5><p><b>Qué hacer:</b> en esa misma pantalla abra <strong>Usuarios de Escritorio remoto → Agregar</strong>. Escriba <code>EMPRESA\Grupo_Ventas_Directivos</code>, pulse <strong>Comprobar nombres → Aceptar</strong>.</p><p class="why"><b>¿Por qué?</b> autorizar un grupo hace que los futuros directivos reciban acceso al hacerse miembros, sin modificar el equipo otra vez.</p><small><b>Qué ocurrió:</b> Ana puede iniciar una sesión remota; Carlos y Laura no, porque pertenecen a otro grupo.</small></div></article>
+            <article><span>3</span><div><h5>Conectarse desde PC-TI01</h5><p><b>Qué hacer:</b> cierre la sesión de Ana en PC-VENTAS01. En PC-TI01 presione <strong>Windows + R</strong>, escriba <code>mstsc</code> y pulse Intro. En Equipo escriba <code>PC-VENTAS01.ad.empresa.example</code> → <strong>Conectar</strong>. Use <code>EMPRESA\atorres</code> y la contraseña definitiva de Ana.</p><p class="why"><b>¿Por qué?</b> usar el nombre completo comprueba DNS además de autenticación y autorización.</p><small><b>Resultado esperado:</b> aparece el escritorio de PC-VENTAS01 y <code>whoami</code> devuelve <code>empresa\atorres</code>.</small></div></article>
+            <article><span>4</span><div><h5>Comprobar la diferencia de permisos</h5><p><b>Qué hacer:</b> cierre la sesión remota e intente repetirla con <code>EMPRESA\cruiz</code>. Debe ser rechazada mientras Comerciales no esté autorizado. Después pruebe <code>\\DC01\Ventas\General</code> con Carlos y <code>\\DC01\Ventas\Direccion</code>.</p><p class="why"><b>¿Por qué?</b> una validación debe incluir tanto lo permitido como lo denegado.</p><small><b>Resultado esperado:</b> Carlos entra en General, no entra en Dirección y no puede abrir Escritorio remoto.</small></div></article>
+          </div>
+          <div class="ad-evidence"><strong>Imagen de referencia 8 · Conexión remota</strong><p>Muestre el nombre completo del equipo en el cliente de Escritorio remoto y una consola dentro de la sesión con <code>hostname</code> y <code>whoami</code>. No capture contraseñas.</p></div>
+
+          <h3 class="subheading" id="ad-verify">10. Validar toda la implementación</h3>
+          <p>Antes de dar por terminado el laboratorio, compruebe objetos, autenticación, DNS, DHCP, permisos y directivas. Una sola prueba exitosa no demuestra que toda la cadena funciona.</p>
           <div class="validation-table" role="table" aria-label="Pruebas de Active Directory">
             <div class="table-row table-head"><span>Prueba</span><span>Comando</span><span>Resultado esperado</span></div>
-            <div class="table-row"><span>Identidad</span><code>whoami</code><span>empresa\atorres o empresa\lgomez</span></div>
+            <div class="table-row"><span>Usuarios</span><code>Get-ADUser -Filter * -SearchBase "OU=Usuarios,OU=Ventas,OU=Empresa,DC=ad,DC=empresa,DC=example"</code><span>Ana, Carlos y Laura habilitados</span></div>
+            <div class="table-row"><span>Grupos</span><code>Get-ADGroupMember Grupo_Ventas_Comerciales</code><span>Carlos y Laura</span></div>
+            <div class="table-row"><span>Identidad</span><code>whoami</code><span>empresa\atorres o empresa\cruiz</span></div>
             <div class="table-row"><span>Controlador</span><code>nltest /dsgetdc:ad.empresa.example</code><span>DC01 y dirección correcta</span></div>
             <div class="table-row"><span>Sesión</span><code>echo %logonserver%</code><span>\\DC01</span></div>
             <div class="table-row"><span>DNS</span><code>nslookup DC01.ad.empresa.example</code><span>192.168.10.10</span></div>
+            <div class="table-row"><span>DHCP</span><code>ipconfig /all</code><span>IP del ámbito, gateway .1 y DNS .10</span></div>
             <div class="table-row"><span>Directivas</span><code>gpupdate /force</code><span>Actualización completada</span></div>
-            <div class="table-row"><span>Resultado GPO</span><code>gpresult /r</code><span>GPO-Base-Usuarios aplicada</span></div>
+            <div class="table-row"><span>Resultado GPO</span><code>gpresult /r</code><span>GPO-Ventas-Usuarios aplicada</span></div>
+            <div class="table-row"><span>Acceso Ana</span><code>\\DC01\Ventas</code><span>General y Dirección disponibles</span></div>
+            <div class="table-row"><span>Acceso Carlos</span><code>\\DC01\Ventas</code><span>General disponible; Dirección denegada</span></div>
           </div>
           <div class="ad-success"><span>✓</span><div><strong>Criterio de éxito</strong><p>Los dos clientes resuelven el dominio mediante DC01, se unen sin error, reinician, aceptan credenciales de usuarios del dominio y reciben las directivas correspondientes.</p></div></div>
 
-          <h3 class="subheading">8. Problemas frecuentes</h3>
+          <h3 class="subheading">11. Problemas frecuentes</h3>
           <div class="accordion">
             <details><summary><span>“No se pudo encontrar el dominio”</span><b>+</b></summary><div><p>Revise que el DNS del cliente sea 192.168.10.10, no el router ni un DNS público. Pruebe los registros SRV con <code>nslookup -type=SRV _ldap._tcp.dc._msdcs.ad.empresa.example</code>.</p></div></details>
             <details><summary><span>La unión pide credenciales repetidamente</span><b>+</b></summary><div><p>Use EMPRESA\usuario o usuario@ad.empresa.example, confirme permisos de unión y revise <code>%windir%\debug\NetSetup.log</code>.</p></div></details>
             <details><summary><span>Kerberos o inicio de sesión falla</span><b>+</b></summary><div><p>Compruebe fecha, zona horaria y sincronización. Una diferencia de reloj puede impedir la autenticación Kerberos.</p></div></details>
             <details><summary><span>La GPO no se aplica</span><b>+</b></summary><div><p>Mueva el objeto a la OU correcta, ejecute <code>gpupdate /force</code> y revise <code>gpresult /h C:\Temp\gpo.html</code>.</p></div></details>
+            <details><summary><span>El cliente obtiene una dirección 169.254.x.x</span><b>+</b></summary><div><p>No recibió una concesión DHCP. Confirme que el ámbito esté activo, el servidor autorizado, el servicio iniciado y el cliente conectado al mismo vSwitch o a una red con retransmisión DHCP.</p></div></details>
+            <details><summary><span>El nombre intranet no resuelve</span><b>+</b></summary><div><p>Ejecute <code>ipconfig /all</code> y confirme DNS 192.168.10.10. Revise que el registro A exista en la zona correcta, limpie la caché con <code>ipconfig /flushdns</code> y vuelva a consultar.</p></div></details>
+            <details><summary><span>Escritorio remoto rechaza a Ana</span><b>+</b></summary><div><p>Cierre y abra la sesión de Ana después de agregarla al grupo, compruebe <code>whoami /groups</code>, valide que el grupo esté en Usuarios de Escritorio remoto y pruebe <code>Test-NetConnection PC-VENTAS01 -Port 3389</code>.</p></div></details>
           </div>
 
-          <h3 class="subheading">9. Recomendaciones para producción</h3>
+          <h3 class="subheading">12. Recomendaciones para producción</h3>
           <div class="practice-grid">
             <div><h3>Disponibilidad</h3><ul><li>Implemente al menos dos DC/DNS.</li><li>Realice copia de seguridad del estado del sistema.</li><li>Pruebe restauración y contraseña DSRM.</li></ul></div>
             <div><h3>Seguridad</h3><ul><li>No use Domain Admin para tareas diarias.</li><li>Delegue la unión de equipos a una OU.</li><li>Implemente Windows LAPS para administradores locales.</li></ul></div>
@@ -559,10 +707,13 @@ Add-Computer -DomainName "ad.empresa.example" `
             <label><input type="checkbox"><span>DC01 tiene nombre definitivo, hora correcta e IP estática.</span></label>
             <label><input type="checkbox"><span>AD DS y DNS están instalados y el bosque funciona.</span></label>
             <label><input type="checkbox"><span>dcdiag y la prueba DNS no muestran errores críticos.</span></label>
-            <label><input type="checkbox"><span>OUs, usuarios y GG-Ventas están creados.</span></label>
+            <label><input type="checkbox"><span>OUs, tres usuarios y los dos grupos de Ventas están creados.</span></label>
+            <label><input type="checkbox"><span>DNS resuelve A, PTR, MX y los registros SRV del dominio.</span></label>
+            <label><input type="checkbox"><span>DHCP está autorizado y entrega gateway, DNS y sufijo correctos.</span></label>
             <label><input type="checkbox"><span>PC-VENTAS01 y PC-TI01 usan DC01 como DNS.</span></label>
             <label><input type="checkbox"><span>Los dos clientes pertenecen al dominio e inician sesión.</span></label>
             <label><input type="checkbox"><span>La GPO de ejemplo se aplica correctamente.</span></label>
+            <label><input type="checkbox"><span>Las pruebas de permisos y conexión remota permiten y deniegan lo esperado.</span></label>
           </div>
         </section>
 
@@ -692,6 +843,13 @@ VMConnect.exe localhost $vmName</code></pre>
             <a href="https://learn.microsoft.com/es-es/windows-server/identity/ad-ds/active-directory-functional-levels" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Niveles funcionales de Active Directory</strong><b>↗</b></a>
             <a href="https://learn.microsoft.com/es-es/windows-server/identity/ad-ds/manage/join-computer-to-domain" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Unir un equipo a un dominio</strong><b>↗</b></a>
             <a href="https://learn.microsoft.com/es-es/troubleshoot/windows-server/networking/best-practices-for-dns-client-settings" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Configuración recomendada de clientes DNS</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/identity/ad-ds/plan/understanding-the-active-directory-logical-model" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Modelo lógico de Active Directory</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/identity/ad-ds/manage/group-policy/group-policy-overview" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Introducción a la Directiva de grupo</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/networking/dns/dns-overview" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Introducción al Sistema de nombres de dominio</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/networking/dns/zone-types" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Zonas DNS en Windows Server</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/networking/technologies/dhcp/quickstart-install-configure-dhcp-server" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Instalar y configurar el servidor DHCP</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/networking/technologies/dhcp/dhcp-scopes" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Ámbitos DHCP en Windows Server</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/remote/remote-desktop-services/remotepc/remote-desktop-allow-access" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Habilitar Escritorio remoto y autorizar usuarios</strong><b>↗</b></a>
             <a href="https://youtu.be/OnKzOt2JCxs" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 5 · Acceso Administrador</strong><b>↗</b></a>
             <a href="https://youtu.be/7PYvZAwkYOw" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 6 · Eventos de apagado</strong><b>↗</b></a>
             <a href="https://youtu.be/hsk4Q-6Zp1A" target="_blank" rel="noreferrer"><span>YouTube · INFORMATICONFIG</span><strong>Lección 7 · Primeras actualizaciones</strong><b>↗</b></a>
