@@ -275,8 +275,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .ad-dc strong { color: #70d8ff; font-size: 1.7rem; }
 .ad-dc b { margin-top: 8px; font-size: .75rem; }
 .ad-architecture > i { color: #70d8ff; font-size: .64rem; font-style: normal; text-transform: uppercase; writing-mode: vertical-rl; }
-.module-jump { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin: 26px 0 38px; }
+.module-jump { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin: 26px 0 38px; }
 .module-jump a { padding: 10px 7px; border: 1px solid var(--line); border-radius: 9px; color: var(--blue-600); background: var(--surface-alt); text-align: center; text-decoration: none; font-size: .72rem; font-weight: 850; }
+.course-order { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: -18px 0 38px; }
+.course-order article { padding: 18px; border: 1px solid var(--line); border-top: 4px solid var(--cyan-500); border-radius: 13px; background: var(--surface-alt); }
+.course-order span { color: var(--blue-600); text-transform: uppercase; letter-spacing: .08em; font-size: .65rem; font-weight: 900; }
+.course-order strong { display: block; margin: 5px 0 7px; font-size: 1rem; }
+.course-order p { margin: 0; color: var(--muted); font-size: .78rem; }
 .ad-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; margin: 22px 0; }
 .ad-plan-grid article { padding: 20px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface-alt); }
 .ad-plan-grid article > span { color: var(--blue-600); text-transform: uppercase; letter-spacing: .12em; font-size: .65rem; font-weight: 900; }
@@ -676,6 +681,7 @@ footer { color: white; background: var(--navy-950); }
   .lesson-page-pager { grid-template-columns: 1fr; }
   .lesson-page-pager a:last-child { align-items: flex-start; text-align: left; }
   .module-jump { grid-template-columns: repeat(2, 1fr); }
+  .course-order { grid-template-columns: 1fr; }
   .ad-plan-grid { grid-template-columns: 1fr; }
   .ad-architecture { grid-template-columns: 1fr; }
   .ad-architecture > i { writing-mode: horizontal-tb; text-align: center; }
