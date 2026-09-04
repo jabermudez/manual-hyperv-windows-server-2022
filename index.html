@@ -489,18 +489,77 @@ Install-ADDSForest `
           <div class="ad-evidence"><strong>Capturas 2D–2H · Promoción</strong><p>Incluya Configuración de implementación, Opciones del controlador, Opciones de DNS, Opciones adicionales, Rutas de acceso, Revisar opciones y Comprobación de requisitos previos. Oculte la contraseña DSRM.</p></div>
 
           <h3 class="subheading">5. Comprobar la promoción y la salud del dominio</h3>
-          <ol class="procedure-list">
-            <li><span>1</span><p>Inicie sesión como <code>EMPRESA\Administrator</code> o <code>Administrator@ad.empresa.example</code>.</p></li>
-            <li><span>2</span><p>En el <strong>Administrador del servidor</strong> confirme que aparecen AD DS y DNS. Abra <strong>Herramientas → DNS</strong> y compruebe las zonas <code>ad.empresa.example</code> y <code>_msdcs.ad.empresa.example</code>.</p></li>
-            <li><span>3</span><p>En la consola DNS haga clic derecho sobre DC01 → <strong>Propiedades → Reenviadores → Editar</strong> y agregue los resolvedores autorizados por la organización. No configure DNS públicos directamente en la tarjeta de red del DC ni de los clientes.</p></li>
-            <li><span>4</span><p>Verifique los registros A y SRV, SYSVOL y NETLOGON. Los clientes localizan el dominio mediante registros SRV de DNS.</p></li>
-          </ol>
-          <div class="code-card large"><div class="code-head"><span>PowerShell / CMD · comprobación inicial</span><button class="copy-button" type="button">Copiar</button></div><pre><code>Get-ADForest
+          <p>Esta fase responde cuatro preguntas: <strong>¿DC01 ya es controlador?, ¿publicó correctamente el dominio en DNS?, ¿puede resolver nombres externos? y ¿están disponibles las carpetas que distribuyen directivas e inicio de sesión?</strong> Compruebe cada respuesta antes de crear usuarios.</p>
+
+          <div class="callout info"><span>DNS</span><div><strong>¿Qué es exactamente un reenviador?</strong><p>Es otro servidor DNS al que DC01 envía únicamente las consultas que no puede resolver en sus propias zonas. Si un cliente pregunta por <code>DC01.ad.empresa.example</code>, DC01 responde directamente. Si pregunta por <code>microsoft.com</code>, DC01 puede enviar esa consulta al reenviador y devolver la respuesta al cliente.</p></div></div>
+          <div class="service-flow dns-forward-flow" role="img" aria-label="Flujo de consulta DNS interna y externa">
+            <div><span>1</span><b>PC cliente</b><small>pregunta siempre a 192.168.10.10</small></div><i>→</i><div><span>2</span><b>DNS de DC01</b><small>responde nombres de ad.empresa.example</small></div><i>→</i><div><span>3</span><b>Reenviador</b><small>solo recibe nombres externos</small></div><i>→</i><div><span>4</span><b>Respuesta</b><small>regresa a DC01 y luego al cliente</small></div>
+          </div>
+
+          <h4>Paso 1 · Confirmar que el inicio de sesión ya pertenece al dominio</h4>
+          <div class="teaching-sequence compact">
+            <article><span>1</span><div><h5>Entrar con la cuenta administrativa del dominio</h5><p><b>Qué hacer:</b> después del reinicio seleccione <strong>Otro usuario</strong> e inicie sesión como <code>EMPRESA\Administrator</code>. También puede usar <code>Administrator@ad.empresa.example</code>. Abra Símbolo del sistema y ejecute <code>whoami</code>.</p><p class="why"><b>¿Por qué?</b> antes de la promoción Administrator era una cuenta local; ahora debe comprobar que la autenticación la realiza el dominio EMPRESA.</p><small><b>Resultado esperado:</b> <code>whoami</code> muestra <code>empresa\administrator</code>. Si aparece <code>dc01\administrator</code>, la sesión no es la cuenta del dominio.</small></div></article>
+          </div>
+
+          <h4>Paso 2 · Confirmar roles, servicios y zonas creadas</h4>
+          <div class="teaching-sequence compact">
+            <article><span>2A</span><div><h5>Revisar el Administrador del servidor</h5><p><b>Qué hacer:</b> abra <strong>Administrador del servidor → Servidor local</strong>. Compruebe que el servidor se llama <strong>DC01</strong> y que el dominio es <code>ad.empresa.example</code>. En el panel izquierdo deben aparecer <strong>AD DS</strong> y <strong>DNS</strong>.</p><small><b>Qué ocurrió:</b> Windows reconoce los dos roles instalados. Un indicador rojo requiere abrir <strong>Eventos</strong> o <strong>Servicios</strong> y revisar el error.</small></div></article>
+            <article><span>2B</span><div><h5>Revisar las zonas DNS</h5><p><b>Qué hacer:</b> seleccione <strong>Herramientas → DNS</strong>. Expanda <strong>DC01 → Zonas de búsqueda directa</strong>. Deben existir <code>ad.empresa.example</code> y <code>_msdcs.ad.empresa.example</code>.</p><p class="why"><b>¿Por qué?</b> la primera zona contiene nombres del dominio; <code>_msdcs</code> publica información para localizar controladores, catálogo global y otros servicios de AD DS.</p><small><b>Resultado esperado:</b> dentro de las zonas aparecen DC01 y carpetas como <code>_tcp</code>, <code>_udp</code>, <code>_sites</code> y <code>dc</code>. No las elimine aunque sus nombres parezcan técnicos.</small></div></article>
+          </div>
+
+          <h4>Paso 3 · Elegir el reenviador correcto</h4>
+          <p>Los reenviadores son <strong>direcciones IP de servidores DNS</strong>, no nombres de dominio ni puertas de enlace elegidas al azar. Use solamente una de estas opciones según su escenario:</p>
+          <div class="forwarder-options">
+            <article><span>A</span><h5>Red de una organización</h5><p>Solicite al administrador las IP de los DNS corporativos superiores o del proveedor de Internet. Ejemplos internos podrían ser <code>10.20.0.10</code> y <code>10.20.0.11</code>, pero <strong>no copie esos ejemplos</strong>: use los valores reales entregados por la organización.</p><strong>Esta es la opción recomendada en producción.</strong></article>
+            <article><span>B</span><h5>Laboratorio doméstico</h5><p>Puede usar <code>192.168.10.1</code> <strong>solo si el router actúa como servidor DNS</strong>. Compruébelo primero con <code>nslookup microsoft.com 192.168.10.1</code>. Si responde y la política del laboratorio lo permite, esa IP puede ser el reenviador.</p><strong>Es la opción coherente con la topología de este curso.</strong></article>
+            <article><span>C</span><h5>DNS público permitido</h5><p>En un laboratorio independiente puede usar, con autorización, Cloudflare <code>1.1.1.1</code> o Google Public DNS <code>8.8.8.8</code>. Son ejemplos de servicios públicos; no pertenecen a Active Directory ni reemplazan el DNS interno.</p><strong>Nunca los coloque en la tarjeta de red de los miembros del dominio.</strong></article>
+            <article><span>D</span><h5>Laboratorio sin Internet</h5><p>No configure ningún reenviador. Active Directory, los usuarios, las GPO y los nombres de <code>ad.empresa.example</code> seguirán funcionando dentro de la red aislada.</p><strong>Solo fallará la resolución de nombres externos.</strong></article>
+          </div>
+          <div class="callout warning"><span>!</span><div><strong>No confunda dos configuraciones diferentes</strong><p>En la tarjeta IPv4 de DC01, <strong>DNS preferido permanece en 192.168.10.10</strong>. En los clientes, el DNS también debe ser 192.168.10.10. La IP externa se escribe únicamente en la pestaña <strong>Reenviadores</strong> del servicio DNS de DC01. Si coloca 1.1.1.1 o 8.8.8.8 en un cliente, ese cliente puede navegar, pero podría no encontrar el dominio.</p></div></div>
+
+          <h4>Paso 4 · Configurar y comprobar el reenviador</h4>
+          <div class="teaching-sequence">
+            <article><span>4A</span><div><h5>Abrir la configuración</h5><p><b>Qué hacer:</b> en <strong>Administrador de DNS</strong>, clic derecho sobre el nombre del servidor <strong>DC01</strong> —no sobre una zona— y seleccione <strong>Propiedades → Reenviadores → Editar</strong>.</p><p class="why"><b>¿Por qué?</b> el reenviador pertenece al servidor DNS completo y se usa cuando ninguna zona local puede responder.</p><small><b>Qué ocurrió:</b> se abrió la lista de destinos externos de DC01; todavía no se ha modificado la tarjeta de red.</small></div></article>
+            <article><span>4B</span><div><h5>Introducir la dirección elegida</h5><p><b>Qué hacer:</b> para este laboratorio, escriba <code>192.168.10.1</code> si la prueba previa confirmó que el router resuelve DNS. Espere la validación, pulse <strong>Aceptar</strong> y luego <strong>Aplicar → Aceptar</strong>. Si el router no presta DNS, use el servidor permitido por su institución o, únicamente en un laboratorio autorizado, <code>1.1.1.1</code> o <code>8.8.8.8</code>.</p><small><b>Resultado esperado:</b> la dirección queda en la lista. Una marca de error significa que DC01 no logra consultarla; revise conectividad, gateway, firewall o la IP elegida.</small></div></article>
+            <article><span>4C</span><div><h5>Probar nombres internos y externos</h5><p><b>Qué hacer:</b> ejecute <code>Resolve-DnsName DC01.ad.empresa.example</code> y después <code>Resolve-DnsName microsoft.com</code>.</p><p class="why"><b>¿Por qué?</b> la primera prueba debe responder desde la zona local; la segunda comprueba el camino hacia el reenviador.</p><small><b>Resultado esperado:</b> DC01 devuelve <code>192.168.10.10</code> para su propio nombre y una o varias IP públicas para microsoft.com. Si solo funciona la primera, AD DS está operativo pero el reenvío externo no.</small></div></article>
+          </div>
+
+          <h4>Paso 5 · Comprobar registros A y SRV</h4>
+          <div class="teaching-sequence compact">
+            <article><span>5A</span><div><h5>Registro A del controlador</h5><p><b>Qué hacer:</b> ejecute <code>Resolve-DnsName DC01.ad.empresa.example -Type A</code>.</p><p class="why"><b>¿Por qué?</b> un registro A relaciona el nombre completo de DC01 con su IPv4.</p><small><b>Resultado esperado:</b> nombre DC01.ad.empresa.example y dirección <code>192.168.10.10</code>.</small></div></article>
+            <article><span>5B</span><div><h5>Registros SRV de LDAP y Kerberos</h5><p><b>Qué hacer:</b> ejecute <code>Resolve-DnsName _ldap._tcp.dc._msdcs.ad.empresa.example -Type SRV</code> y <code>Resolve-DnsName _kerberos._tcp.ad.empresa.example -Type SRV</code>.</p><p class="why"><b>¿Por qué?</b> los clientes consultan SRV para descubrir qué servidor ofrece LDAP y autenticación Kerberos.</p><small><b>Resultado esperado:</b> el destino es <code>DC01.ad.empresa.example</code>; LDAP usa el puerto <code>389</code> y Kerberos el <code>88</code>.</small></div></article>
+          </div>
+
+          <h4>Paso 6 · Comprobar SYSVOL y NETLOGON</h4>
+          <div class="teaching-sequence compact">
+            <article><span>6</span><div><h5>Revisar los recursos compartidos</h5><p><b>Qué hacer:</b> abra Símbolo del sistema como administrador y ejecute <code>net share</code>. Deben aparecer <strong>SYSVOL</strong> y <strong>NETLOGON</strong>. Después ejecute <code>dir \\DC01\SYSVOL</code> y <code>dir \\DC01\NETLOGON</code>.</p><p class="why"><b>¿Por qué?</b> SYSVOL distribuye archivos de las GPO y scripts del dominio; NETLOGON publica scripts de inicio y recursos usados durante el acceso al dominio.</p><small><b>Resultado esperado:</b> ambas rutas abren sin “Ruta de acceso no encontrada” ni “Acceso denegado”. En un bosque nuevo NETLOGON puede estar vacío y seguir siendo correcto.</small></div></article>
+          </div>
+
+          <h4>Paso 7 · Ejecutar el diagnóstico final</h4>
+          <div class="code-card large"><div class="code-head"><span>PowerShell / CMD · comprobación completa</span><button class="copy-button" type="button">Copiar</button></div><pre><code># Identidad y objetos básicos del dominio
+whoami
+Get-ADForest
 Get-ADDomain
 Get-ADDomainController
+
+# Registros que permiten localizar el controlador
+Resolve-DnsName DC01.ad.empresa.example -Type A
+Resolve-DnsName _ldap._tcp.dc._msdcs.ad.empresa.example -Type SRV
+Resolve-DnsName _kerberos._tcp.ad.empresa.example -Type SRV
+
+# Recursos compartidos esenciales
+net share
+dir \\DC01\SYSVOL
+dir \\DC01\NETLOGON
+
+# Salud general y prueba específica de DNS
 dcdiag /v
-dcdiag /test:DNS
-nslookup -type=SRV _ldap._tcp.dc._msdcs.ad.empresa.example</code></pre></div>
+dcdiag /test:DNS /v
+
+# Solo si configuró acceso a Internet mediante reenviador
+Resolve-DnsName microsoft.com</code></pre></div>
+          <div class="ad-success"><span>✓</span><div><strong>La comprobación está completa cuando…</strong><p>la sesión pertenece a EMPRESA, existen las dos zonas DNS, los registros A y SRV apuntan a DC01, SYSVOL y NETLOGON están compartidos y <code>dcdiag</code> no informa errores críticos. Resolver microsoft.com es una prueba adicional de Internet; no es requisito para que Active Directory funcione dentro del laboratorio.</p></div></div>
+          <div class="ad-evidence"><strong>Imagen de referencia 2I · Salud del dominio</strong><p>Incluya una captura de las zonas DNS, otra de la pestaña Reenviadores con la IP autorizada y otra de la consola mostrando A, SRV, SYSVOL y NETLOGON. Oculte direcciones o nombres que pertenezcan a una red real.</p></div>
 
           <h3 class="subheading" id="ad-objects">6. Construir el departamento Ventas</h3>
           <p>Ahora se aplican los conceptos anteriores en este orden: <strong>crear contenedores → crear grupos de función → crear usuarios → hacerlos miembros de los grupos → asignar permisos → vincular una GPO</strong>. Este orden evita permisos individuales difíciles de auditar.</p>
@@ -846,7 +905,10 @@ VMConnect.exe localhost $vmName</code></pre>
             <a href="https://learn.microsoft.com/es-es/windows-server/identity/ad-ds/plan/understanding-the-active-directory-logical-model" target="_blank" rel="noreferrer"><span>Microsoft Learn</span><strong>Modelo lógico de Active Directory</strong><b>↗</b></a>
             <a href="https://learn.microsoft.com/es-es/windows-server/identity/ad-ds/manage/group-policy/group-policy-overview" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Introducción a la Directiva de grupo</strong><b>↗</b></a>
             <a href="https://learn.microsoft.com/es-es/windows-server/networking/dns/dns-overview" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Introducción al Sistema de nombres de dominio</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/networking/dns/quickstart-install-configure-dns-server" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Configurar el servidor DNS y sus reenviadores</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/networking/dns/forwarding" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Funcionamiento del reenvío DNS</strong><b>↗</b></a>
             <a href="https://learn.microsoft.com/es-es/windows-server/networking/dns/zone-types" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Zonas DNS en Windows Server</strong><b>↗</b></a>
+            <a href="https://learn.microsoft.com/es-es/windows-server/administration/windows-commands/dcdiag" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Diagnóstico de controladores de dominio con dcdiag</strong><b>↗</b></a>
             <a href="https://learn.microsoft.com/es-es/windows-server/networking/technologies/dhcp/quickstart-install-configure-dhcp-server" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Instalar y configurar el servidor DHCP</strong><b>↗</b></a>
             <a href="https://learn.microsoft.com/es-es/windows-server/networking/technologies/dhcp/dhcp-scopes" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Ámbitos DHCP en Windows Server</strong><b>↗</b></a>
             <a href="https://learn.microsoft.com/es-es/windows-server/remote/remote-desktop-services/remotepc/remote-desktop-allow-access" target="_blank" rel="noreferrer"><span>Microsoft Learn · Español</span><strong>Habilitar Escritorio remoto y autorizar usuarios</strong><b>↗</b></a>
