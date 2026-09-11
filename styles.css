@@ -282,7 +282,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .course-order span { color: var(--blue-600); text-transform: uppercase; letter-spacing: .08em; font-size: .65rem; font-weight: 900; }
 .course-order strong { display: block; margin: 5px 0 7px; font-size: 1rem; }
 .course-order p { margin: 0; color: var(--muted); font-size: .78rem; }
-.ad-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; margin: 22px 0; }
+.ad-plan-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 13px; margin: 22px 0; }
 .ad-plan-grid article { padding: 20px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface-alt); }
 .ad-plan-grid article > span { color: var(--blue-600); text-transform: uppercase; letter-spacing: .12em; font-size: .65rem; font-weight: 900; }
 .ad-plan-grid h4 { margin: 5px 0 10px; font-size: 1.08rem; }
